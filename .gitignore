@@ -1,0 +1,11 @@
+# Frontend .gitignore
+node_modules
+dist
+
+
+# Python .gitignore
+__pycache__
+
+
+# MacOS .gitignore
+.DS_Store

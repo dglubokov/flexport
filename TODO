@@ -1,0 +1,22 @@
+I Direct Upload
+    1. Multiple file upload list
+    2. File size limit
+    3. Progress bar
+
+II FTP Upload
+    1. Scrollable popup window
+    2. Show FTP server list of files and directories
+    3. Selection button on which file or directory to upload
+    4. Message about check "Sessions" tab
+    5. Python endpoint to handle FTP list of files and directories
+    6. Python endpoint to handle FTP upload
+
+III Link Based Upload
+    1. Message about check "Sessions" tab
+
+
+IV Backend
+    1. Sessions logic. Try to understand how to implement it
+
+V Sessions UI
+    1. Sessions list
