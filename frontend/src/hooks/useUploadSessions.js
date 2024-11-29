@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { fetchUploadSessions as apiFetchUploadSessions, cancelUploadSession as apiCancelUploadSession, deleteUploadSession as apiDeleteUploadSession } from '../services/api';
 
-const useUploadSessions = (token, showUploadSessionsPopup) => {
+const useUploadSessions = (showUploadSessionsPopup) => {
   const [uploadSessions, setUploadSessions] = useState([]);
 
   const fetchUploadSessions = async () => {
     try {
-      const res = await apiFetchUploadSessions(token);
+      const res = await apiFetchUploadSessions();
       if (res.ok) {
         const data = await res.json();
         setUploadSessions(data.sessions);
@@ -32,7 +32,7 @@ const useUploadSessions = (token, showUploadSessionsPopup) => {
 
   const cancelUploadSession = async (sessionId) => {
     try {
-      const res = await apiCancelUploadSession(sessionId, token);
+      const res = await apiCancelUploadSession(sessionId);
       if (res.ok) {
         alert('Upload session cancelled.');
         fetchUploadSessions();
@@ -47,7 +47,7 @@ const useUploadSessions = (token, showUploadSessionsPopup) => {
 
   const deleteUploadSession = async (sessionId) => {
     try {
-      const res = await apiDeleteUploadSession(sessionId, token);
+      const res = await apiDeleteUploadSession(sessionId);
       if (res.ok) {
         alert('Upload session deleted.');
         fetchUploadSessions();

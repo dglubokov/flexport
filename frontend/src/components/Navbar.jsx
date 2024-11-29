@@ -1,6 +1,11 @@
 // src/components/Navbar.jsx
 
 import React from 'react';
+import viewModeIcon from '../assets/images/view.svg';
+import eyeIcon from '../assets/images/eye.svg';
+import eyeOffIcon from '../assets/images/eye-closed.svg';
+import logoutIcon from '../assets/images/logout.svg';
+import uploadIcon from '../assets/images/cloud-upload.svg';
 
 const Navbar = ({
   viewMode,
@@ -20,7 +25,7 @@ const Navbar = ({
           aria-label="Toggle View Mode"
         >
           <img
-            src="https://www.svgrepo.com/show/341295/view-mode-2.svg"
+            src={viewModeIcon}
             alt="View Mode Icon"
             className="icon"
           />
@@ -33,8 +38,8 @@ const Navbar = ({
         >
           <img
             src={showHidden 
-              ? "https://www.svgrepo.com/show/103061/eye.svg" 
-              : "https://static.thenounproject.com/png/22249-200.png"}
+              ? eyeIcon
+              : eyeOffIcon }
             alt="Hidden Files Icon"
             className="icon"
           />
@@ -46,7 +51,7 @@ const Navbar = ({
           aria-label="Logout"
         >
           <img
-            src="https://www.svgrepo.com/show/132889/logout.svg"
+            src={logoutIcon}
             alt="Logout Icon"
             className="icon"
           />
@@ -55,7 +60,7 @@ const Navbar = ({
       
       <div className="button-group">
         <button onClick={() => setShowUploadPopup(true)} className='fancy-button'>
-          <img src="https://www.svgrepo.com/show/446453/cloud-upload.svg" alt="Upload Image" className="icon upload-icon" />
+          <img src={uploadIcon} alt="Upload Image" className="icon upload-icon" />
         </button>
         <button onClick={() => setShowUploadSessionsPopup(true)} className='fancy-button'>Sessions</button>
       </div>

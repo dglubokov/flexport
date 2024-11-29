@@ -2,13 +2,13 @@ import datetime
 
 import sqlite3
 import jwt
-from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Request, status, HTTPException
+from fastapi.security import HTTPBearer
 
 SECRET_KEY = "heiSais2heiSais2"  # Replace with a secure secret key
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
-DATABASE_PATH = "./tokens.db"
+ACCESS_TOKEN_EXPIRE_MINUTES = 600
+DATABASE_PATH = "jwt_tokens.db"
 
 
 def init_db():
@@ -62,21 +62,34 @@ def get_saved_token(token: str) -> dict | None:
     return None
 
 
-def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    token = credentials.credentials
+def get_current_user(request: Request):
+    token = request.cookies.get("token")
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Invalid authentication credentials",
     )
+
+    if not token:
+        raise credentials_exception
+
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         username: str = payload.get("sub")
         if username is None:
             raise credentials_exception
-        # Check if token is in the database
+
+        # Check if token is still valid
         token_data = get_saved_token(token)
         if not token_data or token_data["username"] != username:
             raise credentials_exception
         return username
     except jwt.PyJWTError:
         raise credentials_exception
+
+
+def remove_token(token: str):
+    conn = sqlite3.connect(DATABASE_PATH)
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM tokens WHERE token = ?", (token,))
+    conn.commit()
+    conn.close()

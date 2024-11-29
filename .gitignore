@@ -9,3 +9,7 @@ __pycache__
 
 # MacOS .gitignore
 .DS_Store
+
+
+# Skip *.db file
+*.db

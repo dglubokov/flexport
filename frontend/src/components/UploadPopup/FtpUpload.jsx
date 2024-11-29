@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { handleFtpUpload as apiHandleFtpUpload } from '../../services/api';
 
-const FtpUpload = ({ token, currentPath, fetchFiles, closeUploadPopup }) => {
+const FtpUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
   const [ftpData, setFtpData] = useState({
     protocol: 'FTP',
     host: '',
@@ -17,30 +17,13 @@ const FtpUpload = ({ token, currentPath, fetchFiles, closeUploadPopup }) => {
     setFtpData({ ...ftpData, [e.target.name]: e.target.value });
   };
 
-  const handleFtpUpload = async () => {
-    if (!ftpData.host || !ftpData.username || !ftpData.password) {
-      alert('Please fill in all required fields.');
-      return;
-    }
-
-    try {
-      const res = await apiHandleFtpUpload(ftpData, token);
-      if (res.ok) {
-        alert('FTP upload initiated successfully.');
-        fetchFiles(currentPath); // Refresh the file list
-        closeUploadPopup();
-      } else {
-        alert('Error initiating FTP upload.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('An error occurred during FTP upload.');
-    }
-  };
+  const handleFTPConnection = async () => {
+    // TODO
+  }
 
   return (
-    <div>
-      <h3>Upload from FTP/SFTP</h3>
+    <div className="ftp-upload-container">
+      <h3>Upload from Server to Server</h3>
       <label>
         Protocol:
         <select
@@ -93,17 +76,7 @@ const FtpUpload = ({ token, currentPath, fetchFiles, closeUploadPopup }) => {
         />
       </label>
       <br />
-      <label>
-        Remote Path:
-        <input
-          type="text"
-          name="remotePath"
-          value={ftpData.remotePath}
-          onChange={handleFtpChange}
-        />
-      </label>
-      <br />
-      <button onClick={handleFtpUpload} className="fancy-button" >Upload</button>
+      <button onClick={handleFTPConnection} className="fancy-button" >Connect</button>
     </div>
   );
 };

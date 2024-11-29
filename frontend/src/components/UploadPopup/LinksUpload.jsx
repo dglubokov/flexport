@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { handleLinksUpload as apiHandleLinksUpload } from '../../services/api';
 
-const LinksUpload = ({ token, currentPath, fetchFiles, closeUploadPopup }) => {
+const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
   const [linkList, setLinkList] = useState(['']);
 
   const handleLinkChange = (e, index) => {
@@ -30,7 +30,7 @@ const LinksUpload = ({ token, currentPath, fetchFiles, closeUploadPopup }) => {
     }
 
     try {
-      const res = await apiHandleLinksUpload(linksToUpload, token);
+      const res = await apiHandleLinksUpload(linksToUpload);
       if (res.ok) {
         alert('Links upload initiated successfully.');
         fetchFiles(currentPath); // Refresh the file list

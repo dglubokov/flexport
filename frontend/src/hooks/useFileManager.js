@@ -3,26 +3,21 @@
 import { useState, useEffect } from 'react';
 import { fetchFiles as apiFetchFiles, fetchSpaceInfo as apiFetchSpaceInfo } from '../services/api';
 
-const useFileManager = (initialToken) => {
-  const [token, setToken] = useState(initialToken);
+const useFileManager = () => {
   const [files, setFiles] = useState([]);
   const [currentPath, setCurrentPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [spaceInfo, setSpaceInfo] = useState({});
 
-  useEffect(() => {
-    setToken(initialToken);
-  }, [initialToken]);
-
-  const fetchFiles = async (path = '', token) => {
+  const fetchFiles = async (path = '') => {
     setLoading(true);
     try {
-      const res = await apiFetchFiles(path, token);
+      const res = await apiFetchFiles(path);
       if (res.ok) {
         const data = await res.json();
         setFiles(data.items);
         setCurrentPath(data.current_path);
-        fetchSpaceInfo(token);
+        fetchSpaceInfo();
       } else {
         if (res.status === 401) {
           alert('Session expired. Please log in again.');
@@ -37,9 +32,9 @@ const useFileManager = (initialToken) => {
     }
   };
 
-  const fetchSpaceInfo = async (token) => {
+  const fetchSpaceInfo = async () => {
     try {
-      const res = await apiFetchSpaceInfo(token);
+      const res = await apiFetchSpaceInfo();
       if (res.ok) {
         const data = await res.json();
         setSpaceInfo(data);
@@ -57,6 +52,7 @@ const useFileManager = (initialToken) => {
     currentPath,
     loading,
     spaceInfo,
+    fetchSpaceInfo,
     fetchFiles,
   };
 };

@@ -1,6 +1,6 @@
 // src/components/App.jsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import useAuth from '../hooks/useAuth';
 import useFileManager from '../hooks/useFileManager';
 import useUploadSessions from '../hooks/useUploadSessions';
@@ -13,21 +13,33 @@ import { humanReadableSize } from '../services/utils';
 
 const App = () => {
   const {
-    creds,
+    credentials,
     isAuthenticated,
-    token,
-    handleChange,
+    handleAuthInputChange,
     handleLogin,
-    logout,
+    handleLogout,
+    checkAuthStatus,
   } = useAuth();
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   const {
     files,
     currentPath,
     loading,
     spaceInfo,
+    fetchSpaceInfo,
     fetchFiles,
-  } = useFileManager(token);
+  } = useFileManager();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchFiles();
+      fetchSpaceInfo();
+    }
+  }, [isAuthenticated]);
 
   const [viewMode, setViewMode] = useState('list');
   const [showHidden, setShowHidden] = useState(false);
@@ -39,7 +51,11 @@ const App = () => {
     uploadSessions,
     cancelUploadSession,
     deleteUploadSession,
-  } = useUploadSessions(token, showUploadSessionsPopup);
+  } = useUploadSessions(showUploadSessionsPopup);
+
+  // ---------------------------------------------
+  // Handle functions
+  // ---------------------------------------------
 
   const toggleHiddenFiles = () => {
     setShowHidden(!showHidden);
@@ -48,7 +64,7 @@ const App = () => {
   const handleItemClick = (item) => {
     if (item.is_dir) {
       const newPath = currentPath ? `${currentPath}/${item.name}` : item.name;
-      fetchFiles(newPath, token);
+      fetchFiles(newPath);
     } else {
       alert(`You clicked on file: ${item.name}`);
     }
@@ -59,35 +75,33 @@ const App = () => {
       const pathParts = currentPath.split('/');
       pathParts.pop();
       const newPath = pathParts.join('/');
-      fetchFiles(newPath, token);
-    }
+      fetchFiles(newPath);
+    } 
   };
 
+
+  // ---------------------------------------------
+  // Components
+  // ---------------------------------------------
+
   if (!isAuthenticated) {
-    return (
-      <LoginForm
-        creds={creds}
-        handleChange={handleChange}
-        handleLogin={async () => {
-          const tempToken = await handleLogin();
-          if (tempToken) {
-            fetchFiles('', tempToken);
-          }
-        }}
-        loading={loading}
-      />
-    );
+    return <LoginForm
+      credentials={credentials}
+      handleChange={handleAuthInputChange}
+      handleLogin={handleLogin}
+      loading={loading}
+    />;
   }
 
   return (
     <div className="files-container">
       <Navbar
-        creds={creds}
+        credentials={credentials}
         viewMode={viewMode}
         setViewMode={setViewMode}
         showHidden={showHidden}
         toggleHiddenFiles={toggleHiddenFiles}
-        logout={logout}
+        logout={handleLogout}
         setShowUploadPopup={setShowUploadPopup}
         setShowUploadSessionsPopup={setShowUploadSessionsPopup}
       />
@@ -112,7 +126,6 @@ const App = () => {
       {showUploadPopup && (
         <UploadPopup
           closeUploadPopup={() => setShowUploadPopup(false)}
-          token={token}
           currentPath={currentPath}
           fetchFiles={fetchFiles}
         />

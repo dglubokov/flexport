@@ -2,105 +2,125 @@
 
 const API_BASE_URL = 'http://localhost:8000';
 
-export const login = async (creds) => {
+export const login = async (credentials) => {
   const res = await fetch(`${API_BASE_URL}/login`, {
     method: 'POST',
+    credentials: 'include',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(creds),
+    body: JSON.stringify(credentials),
   });
   return res;
 };
 
-export const fetchFiles = async (path, token) => {
+export const logout = async () => {
+  const res = await fetch(`${API_BASE_URL}/logout`, {
+    method: 'POST',
+    credentials: 'include',
+  });
+  return res;
+}
+
+export const checkAuth = async () => {
+  const res = await fetch(`${API_BASE_URL}/check_token`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return res;
+}
+
+export const fetchFiles = async (path) => {
   const res = await fetch(
     `${API_BASE_URL}/list_files?path=${encodeURIComponent(path)}`,
     {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     }
   );
   return res;
 };
 
-export const downloadFile = async (path, token) => {
+export const downloadFile = async (path) => {
   const res = await fetch(
     `${API_BASE_URL}/download_file?path=${encodeURIComponent(path)}`,
     {
       method: 'GET',
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
     }
   );
   return res;
 }
 
-export const fetchSpaceInfo = async (token) => {
+export const fetchSpaceInfo = async () => {
   const res = await fetch(`${API_BASE_URL}/space_info`, {
     method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   return res;
 }
 
 
-export const fetchUploadSessions = async (token) => {
+export const fetchUploadSessions = async () => {
   const res = await fetch(`${API_BASE_URL}/list_upload_sessions`, {
     method: 'GET',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
   });
   return res;
 }
 
 
-export const cancelUploadSession = async (sessionId, token) => {
+export const cancelUploadSession = async (sessionId) => {
   const res = await fetch(`${API_BASE_URL}/cancel_upload_session`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json'},
     body: JSON.stringify({ session_id: sessionId }),
   });
   return res;
 }
 
 
-export const deleteUploadSession = async (sessionId, token) => {
+export const deleteUploadSession = async (sessionId) => {
   const res = await fetch(`${API_BASE_URL}/delete_upload_session`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json'},
     body: JSON.stringify({ session_id: sessionId }),
   });
   return res;
 }
 
 
-export const handleDirectUpload = async (file, token) => {
+export const handleDirectUpload = async (path, file) => {
   const formData = new FormData();
   formData.append('file', file);
+  formData.append('current_path', path);
   const res = await fetch(`${API_BASE_URL}/direct_upload`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
     body: formData,
   });
   return res;
 }
 
 
-export const handleFtpUpload = async (file, token) => {
+export const handleFtpUpload = async (file) => {
   const formData = new FormData();
   formData.append('file', file);
   const res = await fetch(`${API_BASE_URL}/ftp_upload`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
+    credentials: 'include',
     body: formData,
   });
   return res;
 }
 
 
-export const handleLinksUpload = async (links, token) => {
+export const handleLinksUpload = async (links) => {
   const res = await fetch(`${API_BASE_URL}/links_upload`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json'},
     body: JSON.stringify({ links }),
   });
   return res;
 }
-

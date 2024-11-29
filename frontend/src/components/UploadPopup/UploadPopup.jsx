@@ -5,7 +5,7 @@ import DirectUpload from './DirectUpload';
 import FtpUpload from './FtpUpload';
 import LinksUpload from './LinksUpload';
 
-const UploadPopup = ({ closeUploadPopup, token, currentPath, fetchFiles }) => {
+const UploadPopup = ({ closeUploadPopup, currentPath, fetchFiles }) => {
   const [uploadOption, setUploadOption] = useState('');
 
   const handleUploadOptionSelect = (option) => {
@@ -33,7 +33,7 @@ const UploadPopup = ({ closeUploadPopup, token, currentPath, fetchFiles }) => {
           <div className="upload-description">From Your Computer</div>
           
           <button onClick={() => handleUploadOptionSelect('ftp')} className='fancy-button upload-option'>
-            FTP Upload 
+            From Server to Server
           </button>
           <div className="upload-description">From FTP Server (e.g. NovoGene)</div>
           
@@ -49,7 +49,6 @@ const UploadPopup = ({ closeUploadPopup, token, currentPath, fetchFiles }) => {
 
     {uploadOption === 'direct' && (
       <DirectUpload
-        token={token}
         currentPath={currentPath}
         fetchFiles={fetchFiles}
         closeUploadPopup={closeUploadPopup}
@@ -58,7 +57,6 @@ const UploadPopup = ({ closeUploadPopup, token, currentPath, fetchFiles }) => {
 
     {uploadOption === 'ftp' && (
       <FtpUpload
-        token={token}
         currentPath={currentPath}
         fetchFiles={fetchFiles}
         closeUploadPopup={closeUploadPopup}
@@ -67,7 +65,6 @@ const UploadPopup = ({ closeUploadPopup, token, currentPath, fetchFiles }) => {
 
     {uploadOption === 'links' && (
       <LinksUpload
-        token={token}
         currentPath={currentPath}
         fetchFiles={fetchFiles}
         closeUploadPopup={closeUploadPopup}

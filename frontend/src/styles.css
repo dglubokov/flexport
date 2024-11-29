@@ -31,9 +31,8 @@ body {
   border-radius: 12px;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   padding: 40px;
-  max-width: 1200px; /* Limit the container width for better readability on larger screens */
   text-align: center;
-  min-width: 500px;
+  width: 800px;
 }
 
 h1 {
@@ -52,7 +51,7 @@ h2 {
 .login-input {
     padding: 14px;
     margin: 10px 0;
-    width: 100%;
+    width: 500px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 16px;
@@ -237,6 +236,7 @@ h2 {
   text-align: left;
   flex: 1;
   font-weight: bold;
+  width: 300px;
 }
 
 
@@ -284,27 +284,6 @@ button + button {
 
 .view-toggle button:hover {
   background-color: #e5e7eb;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .tiles-container {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-  }
-
-  .login-container,
-  .files-container {
-    padding: 20px;
-    min-width: 50px;
-  }
-
-  h1 {
-    font-size: 24px;
-  }
-
-  h2 {
-    font-size: 20px;
-  }
 }
 
 .modal-overlay {
@@ -368,7 +347,8 @@ button + button {
 .upload-popup input,
 .upload-popup select {
     width: 100%;
-    padding: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
     margin-bottom: 12px;
     border-radius: 6px;
     border: 1px solid #d1d5db;
@@ -497,6 +477,10 @@ button + button {
   font-family: 'Arial', sans-serif;
   font-size: 16px;
   color: #111827;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 1opx;
 }
 
 .file-list span {
@@ -599,4 +583,62 @@ button + button {
   color: #6b7280;
   margin-top: 10px;
   margin-bottom: 20px;
+}
+
+.ftp-upload-container {
+  max-width: 500px;
+  max-height: 500px;
+  overflow-y: auto;
+  padding: 40px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+
+/* Responsive Design */
+@media (max-width: 770px) {
+  .tiles-container {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  }
+
+  .login-container,
+  .files-container {
+    padding: 20px;
+    width: 400px;
+  }
+
+  h1 {
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  .file-owner {
+    display: none;
+  }
+
+  .file-group {
+    display: none;
+  }
+
+  .file-date {
+    width: 100px;
+  }
+
+  .fancy-button {
+    font-size: 12px;
+    padding: 10px 20px;
+  }
+
+  .icon-button {
+    padding: 8px;
+  }
+
+  .upload-icon {
+    width: 20px;
+    height: 20px;
+  }
+
 }

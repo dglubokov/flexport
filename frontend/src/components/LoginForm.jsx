@@ -2,14 +2,14 @@
 
 import React from 'react';
 
-const LoginForm = ({ creds, handleChange, handleLogin, loading }) => (
+const LoginForm = ({ credentials, handleChange, handleLogin, loading }) => (
   <div className="login-container">
     <h1>Login to View Your Files</h1>
     <input
       type="text"
       name="username"
       placeholder="Username"
-      value={creds.username}
+      value={credentials.username}
       onChange={handleChange}
       className="login-input"
     />
@@ -18,7 +18,7 @@ const LoginForm = ({ creds, handleChange, handleLogin, loading }) => (
       type="password"
       name="password"
       placeholder="Password"
-      value={creds.password}
+      value={credentials.password}
       onChange={handleChange}
       className="login-input"
     />
