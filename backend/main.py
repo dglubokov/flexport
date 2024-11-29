@@ -1,16 +1,26 @@
 import os
 import stat
+import uuid
 from pathlib import Path
 from pwd import getpwnam
 
-from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile, Form, Request
+from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile, Form, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2AuthorizationCodeBearer
-from pydantic import BaseModel
 
 from flexport.tokens import create_access_token, get_current_user, remove_token
 from flexport.utils import authenticate_user
+from flexport.sftp_ftp import list_files_ftp, list_files_sftp, download_ftp, download_sftp
+from flexport.models import (
+    Credentials,
+    SessionStatus,
+    SessionStatusEnum,
+    SessionTypeEnum,
+    FTPRequest,
+    SFTPRequest,
+    FTPDownloadRequest,
+)
 
 MAX_FILE_SIZE = 1 * 1024 * 1024 * 1024  # 1 GB
 
@@ -34,11 +44,6 @@ app.add_middleware(
 # --------------------------------
 # Authentication Endpoints
 # --------------------------------
-
-
-class Credentials(BaseModel):
-    username: str
-    password: str
 
 
 @app.post("/login")
@@ -75,10 +80,10 @@ def logout(request: Request):
 @app.get("/check_token")
 def check_token(request: Request):
     try:
-        _ = get_current_user(request)
-        return JSONResponse(content={"authenticated": True})
+        username = get_current_user(request)
+        return JSONResponse(content={"authenticated": True, "username": username})
     except HTTPException:
-        return JSONResponse(content={"authenticated": False}, status_code=401)
+        return JSONResponse(content={"authenticated": False, "username": ""}, status_code=401)
 
 
 # --------------------------------
@@ -231,3 +236,102 @@ async def upload_files(
         content={"message": "Files uploaded successfully.", "uploaded_file": file.filename},
         status_code=200,
     )
+
+
+@app.post("/ftp/list-files/")
+async def list_files_ftp_endpoint(credentials: FTPRequest):
+    """
+    List files and directories from an FTP server.
+    """
+    port = credentials.port if credentials.port else 21
+    path = credentials.path if credentials.path else "/"
+    try:
+        file_list = list_files_ftp(
+            host=credentials.host,
+            username=credentials.username,
+            password=credentials.password,
+            port=port,
+            path=path,
+        )
+        if file_list is None:
+            raise HTTPException(status_code=500, detail="Failed to fetch the file list.")
+        return {"files": file_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/sftp/list-files/")
+async def list_files_sftp_endpoint(credentials: SFTPRequest):
+    """
+    List files and directories from an SFTP server.
+    """
+    port = credentials.port if credentials.port else 22
+    path = credentials.path if credentials.path else "/"
+    try:
+        file_list = list_files_sftp(
+            host=credentials.host,
+            username=credentials.username,
+            password=credentials.password,
+            port=port,
+            path=path,
+        )
+        if file_list is None:
+            raise HTTPException(status_code=500, detail="Failed to fetch the file list.")
+        return {"files": file_list}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/ftp/download/")
+async def download_ftp_endpoint(request: FTPDownloadRequest):
+    """
+    Download a file or folder from an FTP server.
+    """
+    try:
+        download_ftp(
+            host=request.host,
+            username=request.username,
+            password=request.password,
+            remote_path=request.remote_path,
+            local_path=request.local_path,
+            port=request.port,
+        )
+        return {"message": f"Downloaded {request.remote_path} to {request.local_path}."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# TODO: Replace with a database
+sessions: dict[str, list[SessionStatus]] = {}
+
+
+@app.post("/sftp/download/")
+async def download_sftp_endpoint(request: SFTPRequest, background_tasks: BackgroundTasks):
+    """
+    Download a file or folder from an SFTP server.
+    """
+    session_id = str(uuid.uuid4())
+    user_sessions = sessions.setdefault(request.local_user_id, [])
+    user_sessions.append(
+        SessionStatus(session_id=session_id, type=SessionTypeEnum.sftp_download, status=SessionStatusEnum.queued)
+    )
+
+    background_tasks.add_task(
+        download_sftp,
+        sessions,
+        request.host,
+        request.username,
+        request.password,
+        request.path,
+        request.local_path,
+        session_id,
+        request.local_user_id,
+        request.port,
+    )
+    return {"message": "Download session created", "session_id": session_id}
+
+
+@app.get("/sessions/{local_user_id}")
+async def get_sessions(local_user_id: str):
+    user_sessions = sessions.get(local_user_id, [])
+    return {"sessions": user_sessions}

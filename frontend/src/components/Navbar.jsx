@@ -14,7 +14,21 @@ const Navbar = ({
   toggleHiddenFiles,
   logout,
   setShowUploadPopup,
-}) => (
+  setShowUploadSessionsPopup,
+  showSelection,
+  setShowSelection,
+  files,
+}) => {
+
+  const handleSelection = () => {
+    setShowSelection(!showSelection);
+  }
+
+  const checkIfFilesSelected = () => {
+    return files.some(file => file.selected);
+  }
+
+  return (
   <div className="navbar">
     <div className="navbar-buttons">
       <div className="button-group">
@@ -59,13 +73,22 @@ const Navbar = ({
       </div>
       
       <div className="button-group">
+      {showSelection && checkIfFilesSelected() && (
+          <div className="selection-buttons">
+          <button className='button-download'>Download</button>
+          <button className='button-delete'>Delete</button>
+          </div>
+        )}
+        <button onClick={() => handleSelection()} className='fancy-button'>Select</button>
         <button onClick={() => setShowUploadPopup(true)} className='fancy-button'>
           <img src={uploadIcon} alt="Upload Image" className="icon upload-icon" />
         </button>
         <button onClick={() => setShowUploadSessionsPopup(true)} className='fancy-button'>Sessions</button>
+        
       </div>
     </div>
   </div>
 );
+}
 
 export default Navbar;

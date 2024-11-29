@@ -3,7 +3,7 @@
 import React from 'react';
 import { humanReadableSize } from '../services/utils';
 
-const FileItem = ({ item, handleItemClick, viewMode }) => {
+const FileItem = ({ item, handleItemClick, viewMode, showSelection, handleSelection }) => {
   const formatPermissions = (permissions, isDir) => {
     // Add file type character
     const fileType = isDir ? 'd' : '-';
@@ -68,19 +68,30 @@ const FileItem = ({ item, handleItemClick, viewMode }) => {
     );
   } else {
     return (
-      <li
-      className={`file-item ${item.is_dir ? 'directory' : 'file'}`}
-      onClick={() => handleItemClick(item)}
-    >
-      <span className="file-permissions">
-        {formatPermissions(item.permissions, item.is_dir)}
-      </span>
-      <span className="file-owner">{item.owner}</span>
-      <span className="file-group">{item.group}</span>
-      <span className="file-size">{humanReadableSize(item.size)}</span>
-      <span className="file-date">{formatDateModified(item.date_modified)}</span>
-      <span className="file-name">{item.is_dir ? '🗂️' : '📄'} {item.name}</span>
-    </li>
+      <div>
+      {showSelection && (
+        <input
+          type="checkbox"
+          checked={item.selected}
+          onChange={() => handleSelection(item)}
+          className='file-checkbox'
+        />
+      )}
+        <li
+        className={`file-item ${item.is_dir ? 'directory' : 'file'}`}
+        onClick={() => handleItemClick(item)}
+        key={item.name}
+      >
+        <span className="file-permissions">
+          {formatPermissions(item.permissions, item.is_dir)}
+        </span>
+        <span className="file-owner">{item.owner}</span>
+        <span className="file-group">{item.group}</span>
+        <span className="file-size">{humanReadableSize(item.size)}</span>
+        <span className="file-date">{formatDateModified(item.date_modified)}</span>
+        <span className="file-name">{item.is_dir ? '🗂️' : '📄'} {item.name}</span>
+      </li>
+    </div>
     );
   }
 };

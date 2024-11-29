@@ -8,6 +8,8 @@ const useFileManager = () => {
   const [currentPath, setCurrentPath] = useState('');
   const [loading, setLoading] = useState(false);
   const [spaceInfo, setSpaceInfo] = useState({});
+  const [showSelection, setShowSelection] = useState(false);
+  const [selectedItems, setSelectedItems] = useState({});
 
   const fetchFiles = async (path = '') => {
     setLoading(true);
@@ -15,7 +17,14 @@ const useFileManager = () => {
       const res = await apiFetchFiles(path);
       if (res.ok) {
         const data = await res.json();
-        setFiles(data.items);
+        const files = data.items;
+
+        // Add a 'selected' property to each file
+        files.forEach((file) => {
+          file.selected = !!selectedItems[file.name];
+        });
+
+        setFiles(files);
         setCurrentPath(data.current_path);
         fetchSpaceInfo();
       } else {
@@ -49,11 +58,14 @@ const useFileManager = () => {
 
   return {
     files,
+    setFiles,
     currentPath,
     loading,
     spaceInfo,
     fetchSpaceInfo,
     fetchFiles,
+    showSelection,
+    setShowSelection,
   };
 };
 

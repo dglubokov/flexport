@@ -59,36 +59,6 @@ export const fetchSpaceInfo = async () => {
 }
 
 
-export const fetchUploadSessions = async () => {
-  const res = await fetch(`${API_BASE_URL}/list_upload_sessions`, {
-    method: 'GET',
-    credentials: 'include',
-  });
-  return res;
-}
-
-
-export const cancelUploadSession = async (sessionId) => {
-  const res = await fetch(`${API_BASE_URL}/cancel_upload_session`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json'},
-    body: JSON.stringify({ session_id: sessionId }),
-  });
-  return res;
-}
-
-
-export const deleteUploadSession = async (sessionId) => {
-  const res = await fetch(`${API_BASE_URL}/delete_upload_session`, {
-    method: 'POST',
-    credentials: 'include',
-    headers: { 'Content-Type': 'application/json'},
-    body: JSON.stringify({ session_id: sessionId }),
-  });
-  return res;
-}
-
 
 export const handleDirectUpload = async (path, file) => {
   const formData = new FormData();
@@ -103,13 +73,43 @@ export const handleDirectUpload = async (path, file) => {
 }
 
 
-export const handleFtpUpload = async (file) => {
-  const formData = new FormData();
-  formData.append('file', file);
-  const res = await fetch(`${API_BASE_URL}/ftp_upload`, {
+export const fetchFTPFiles = async (ftpData) => {
+  const res = await fetch(`${API_BASE_URL}/ftp/list-files`, {
     method: 'POST',
     credentials: 'include',
-    body: formData,
+    headers: { 'Content-Type': 'application/json'},
+    body: JSON.stringify(ftpData),
+  });
+  return res;
+}
+
+export const downloadFTPFile = async (ftpData) => {
+  const res = await fetch(`${API_BASE_URL}/ftp/download`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json'},
+    body: JSON.stringify(ftpData),
+  });
+  return res;
+}
+
+
+export const fetchSFTPFiles = async (ftpData) => {
+  const res = await fetch(`${API_BASE_URL}/sftp/list-files`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json'},
+    body: JSON.stringify(ftpData),
+  });
+  return res;
+}
+
+export const downloadSFTPFile = async (ftpData) => {
+  const res = await fetch(`${API_BASE_URL}/sftp/download`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json'},
+    body: JSON.stringify(ftpData),
   });
   return res;
 }
@@ -123,4 +123,21 @@ export const handleLinksUpload = async (links) => {
     body: JSON.stringify({ links }),
   });
   return res;
+}
+
+
+export const fetchUploadSessions = async (username) => {
+  const res = await fetch(`${API_BASE_URL}/sessions/${username}`, {
+    method: 'GET',
+    credentials: 'include',
+  });
+  return res;
+}
+
+export const cancelUploadSession = async (sessionId) => {
+  console.log('Cancelling session', sessionId);
+}
+
+export const deleteUploadSession = async (sessionId) => {
+  console.log('Deleting session', sessionId);
 }

@@ -3,12 +3,12 @@
 import { useState, useEffect } from 'react';
 import { fetchUploadSessions as apiFetchUploadSessions, cancelUploadSession as apiCancelUploadSession, deleteUploadSession as apiDeleteUploadSession } from '../services/api';
 
-const useUploadSessions = (showUploadSessionsPopup) => {
+const useUploadSessions = ({ showUploadSessionsPopup, credentials }) => {
   const [uploadSessions, setUploadSessions] = useState([]);
 
   const fetchUploadSessions = async () => {
     try {
-      const res = await apiFetchUploadSessions();
+      const res = await apiFetchUploadSessions(credentials.username);
       if (res.ok) {
         const data = await res.json();
         setUploadSessions(data.sessions);
@@ -23,6 +23,7 @@ const useUploadSessions = (showUploadSessionsPopup) => {
 
   useEffect(() => {
     let interval;
+    console.log(`showUploadSessionsPopup: ${showUploadSessionsPopup}`);
     if (showUploadSessionsPopup) {
       fetchUploadSessions();
       interval = setInterval(fetchUploadSessions, 5000); // Refresh every 5 seconds
@@ -62,7 +63,6 @@ const useUploadSessions = (showUploadSessionsPopup) => {
 
   return {
     uploadSessions,
-    fetchUploadSessions,
     cancelUploadSession,
     deleteUploadSession,
   };

@@ -5,7 +5,7 @@ import DirectUpload from './DirectUpload';
 import FtpUpload from './FtpUpload';
 import LinksUpload from './LinksUpload';
 
-const UploadPopup = ({ closeUploadPopup, currentPath, fetchFiles }) => {
+const UploadPopup = ({ closeUploadPopup, currentPath, fetchFiles, credentials }) => {
   const [uploadOption, setUploadOption] = useState('');
 
   const handleUploadOptionSelect = (option) => {
@@ -58,7 +58,7 @@ const UploadPopup = ({ closeUploadPopup, currentPath, fetchFiles }) => {
     {uploadOption === 'ftp' && (
       <FtpUpload
         currentPath={currentPath}
-        fetchFiles={fetchFiles}
+        credentials={credentials}
         closeUploadPopup={closeUploadPopup}
       />
     )}

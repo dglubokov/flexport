@@ -27,11 +27,14 @@ const App = () => {
 
   const {
     files,
+    setFiles,
     currentPath,
     loading,
     spaceInfo,
     fetchSpaceInfo,
     fetchFiles,
+    showSelection,
+    setShowSelection,
   } = useFileManager();
 
   useEffect(() => {
@@ -51,7 +54,10 @@ const App = () => {
     uploadSessions,
     cancelUploadSession,
     deleteUploadSession,
-  } = useUploadSessions(showUploadSessionsPopup);
+  } = useUploadSessions({
+    showUploadSessionsPopup,
+    credentials
+  });
 
   // ---------------------------------------------
   // Handle functions
@@ -59,15 +65,6 @@ const App = () => {
 
   const toggleHiddenFiles = () => {
     setShowHidden(!showHidden);
-  };
-
-  const handleItemClick = (item) => {
-    if (item.is_dir) {
-      const newPath = currentPath ? `${currentPath}/${item.name}` : item.name;
-      fetchFiles(newPath);
-    } else {
-      alert(`You clicked on file: ${item.name}`);
-    }
   };
 
   const goBack = () => {
@@ -78,7 +75,6 @@ const App = () => {
       fetchFiles(newPath);
     } 
   };
-
 
   // ---------------------------------------------
   // Components
@@ -104,6 +100,9 @@ const App = () => {
         logout={handleLogout}
         setShowUploadPopup={setShowUploadPopup}
         setShowUploadSessionsPopup={setShowUploadSessionsPopup}
+        showSelection={showSelection}
+        setShowSelection={setShowSelection}
+        files={files}
       />
 
       <h3>{currentPath}</h3>
@@ -128,6 +127,7 @@ const App = () => {
           closeUploadPopup={() => setShowUploadPopup(false)}
           currentPath={currentPath}
           fetchFiles={fetchFiles}
+          credentials={credentials}
         />
       )}
 
@@ -143,12 +143,15 @@ const App = () => {
       )}
 
       <FileList
+        currentPath={currentPath}
+        fetchFiles={fetchFiles}
         files={files}
-        handleItemClick={handleItemClick}
+        setFiles={setFiles}
         goBack={goBack}
         showHidden={showHidden}
         viewMode={viewMode}
         loading={loading}
+        showSelection={showSelection}
       />
     </div>
   );

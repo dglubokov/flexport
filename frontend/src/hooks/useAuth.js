@@ -60,6 +60,11 @@ const useAuth = () => {
       const response = await apiCheckAuth();
       const data = response.ok ? await response.json() : { authenticated: false };
 
+      // Set username to credentials if authenticated
+      if (data.authenticated) {
+        setCredentials((prev) => ({ ...prev, username: data.username }));
+      }
+
       // Update authentication status
       setIsAuthenticated(data.authenticated);
     } catch (error) {

@@ -27,27 +27,41 @@ const UploadSessionsPopup = ({
         ) : (
           uploadSessions
             .filter(
-              (session) => showFinishedSessions || session.status !== 'finished'
+              (session) => showFinishedSessions || session.status !== 'completed'
             )
             .map((session) => (
-              <div key={session.id} className={`session-item ${session.status}`}>
-                <span>{session.name}</span>
-                <span>Status: {session.status}</span>
+              <div key={session.session_id} className={`session-item session-${session.status}`}>
+                <div className="session-info">
+                  <span className="session-type">{session.type}  </span>
+                  <span className="session-status">{session.status}</span>
+                  <span className="session-details">{session.details}</span>
+                </div>
                 <div className="session-actions">
-                  {session.status !== 'finished' && (
-                    <button onClick={() => cancelUploadSession(session.id)}>
+                  {session.status !== 'completed' && (
+                    <button
+                      className="action-button cancel-button"
+                      onClick={() => cancelUploadSession(session.id)}
+                    >
                       Cancel
                     </button>
                   )}
-                  <button onClick={() => deleteUploadSession(session.id)}>
-                    Delete
+                  <button
+                    className="action-button delete-button"
+                    onClick={() => deleteUploadSession(session.id)}
+                  >
+                    Stop
                   </button>
                 </div>
               </div>
             ))
         )}
       </div>
-      <button onClick={closePopup}>Close</button>
+      <button
+        className="fancy-button cancel-button"
+        onClick={closePopup}
+      >
+        Close
+      </button>
     </div>
   </div>
 );
