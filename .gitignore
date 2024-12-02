@@ -13,3 +13,5 @@ __pycache__
 
 # Skip *.db file
 *.db
+*.db-shm
+*.db-wal

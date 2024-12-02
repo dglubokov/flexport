@@ -69,7 +69,7 @@ const FileItem = ({ item, handleItemClick, viewMode, showSelection, handleSelect
   } else {
     return (
       <div>
-      {showSelection && (
+      {showSelection && item.is_file && (
         <input
           type="checkbox"
           checked={item.selected}

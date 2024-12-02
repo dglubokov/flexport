@@ -31,24 +31,13 @@ pip install -r requirements.txt
 **Run development server**
 
 ```bash
-uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+uvicorn main:app --host 0.0.0.0 --port 8009 --reload
 ```
+
 
 ## TODO
 
-### Navbar
-    - Download selected
-    - Delete selected
+- Structurize code
+- Add tests
+- Add deployment instructions and scripts
 
-### Direct Upload
-    - Progress bar improvement
-
-### Link Based Upload
-    - Backend Endpoint to handle link based upload
-    - Session logic for link based upload
-    - Message about check "Sessions" tab
-
-### Sessions
-    - DB based session management
-    - FTP test
-    - Link based upload test

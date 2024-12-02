@@ -23,9 +23,12 @@ class SessionTypeEnum(str, Enum):
 
 class SessionStatus(BaseModel):
     session_id: str
+    username: str
     type: SessionTypeEnum
     status: SessionStatusEnum
     file_name: str = ""
+    started_at: str = ""
+    started_at_unix: int = 0
     uploaded_at: str = ""
     completed_at: str = ""
     details: str = ""
@@ -33,14 +36,6 @@ class SessionStatus(BaseModel):
 
 
 # Request models for listing and downloading
-class FTPRequest(BaseModel):
-    host: str
-    username: str
-    password: str
-    port: int = 21  # Default FTP port
-    path: str = "/"  # Default to root directory
-
-
 class SFTPRequest(BaseModel):
     host: str
     username: str
@@ -51,6 +46,6 @@ class SFTPRequest(BaseModel):
     path: str = "/"  # Default to root directory
 
 
-class FTPDownloadRequest(FTPRequest):
-    remote_path: str
-    local_path: str
+class LinksUploadBody(BaseModel):
+    links: list[str]
+    path: str

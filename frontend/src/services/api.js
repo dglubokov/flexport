@@ -1,6 +1,6 @@
 // src/services/api.js
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = 'http://0.0.0.0:8009';
 
 export const login = async (credentials) => {
   const res = await fetch(`${API_BASE_URL}/login`, {
@@ -39,17 +39,6 @@ export const fetchFiles = async (path) => {
   return res;
 };
 
-export const downloadFile = async (path) => {
-  const res = await fetch(
-    `${API_BASE_URL}/download_file?path=${encodeURIComponent(path)}`,
-    {
-      method: 'GET',
-      credentials: 'include',
-    }
-  );
-  return res;
-}
-
 export const fetchSpaceInfo = async () => {
   const res = await fetch(`${API_BASE_URL}/space_info`, {
     method: 'GET',
@@ -57,8 +46,6 @@ export const fetchSpaceInfo = async () => {
   });
   return res;
 }
-
-
 
 export const handleDirectUpload = async (path, file) => {
   const formData = new FormData();
@@ -72,6 +59,27 @@ export const handleDirectUpload = async (path, file) => {
   return res;
 }
 
+export const handleDownload = async (path) => {
+  const formData = new FormData();
+  formData.append('path', path);
+  const res = await fetch(`${API_BASE_URL}/direct_download`, {
+    method: 'POST',
+    credentials: 'include',
+    body: formData,
+  });
+  return res;
+}
+
+export const handleDelete = async (path, file_name) => {
+  const formData = new FormData();
+  formData.append('path', path);
+  const res = await fetch(`${API_BASE_URL}/delete_file`, {
+    method: 'DELETE',
+    credentials: 'include',
+    body: formData,
+  });
+  return res;
+}
 
 export const fetchFTPFiles = async (ftpData) => {
   const res = await fetch(`${API_BASE_URL}/ftp/list-files`, {
@@ -115,12 +123,12 @@ export const downloadSFTPFile = async (ftpData) => {
 }
 
 
-export const handleLinksUpload = async (links) => {
+export const handleLinksUpload = async (links, path) => {
   const res = await fetch(`${API_BASE_URL}/links_upload`, {
     method: 'POST',
     credentials: 'include',
-    headers: { 'Content-Type': 'application/json'},
-    body: JSON.stringify({ links }),
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ links, path }),
   });
   return res;
 }
@@ -134,10 +142,11 @@ export const fetchUploadSessions = async (username) => {
   return res;
 }
 
-export const cancelUploadSession = async (sessionId) => {
-  console.log('Cancelling session', sessionId);
+export const deleteUploadSession = async (sessionId) => {
+  const res = await fetch(`${API_BASE_URL}/sessions/${sessionId}`, {
+    method: 'DELETE',
+    credentials: 'include',
+  });
+  return res;
 }
 
-export const deleteUploadSession = async (sessionId) => {
-  console.log('Deleting session', sessionId);
-}

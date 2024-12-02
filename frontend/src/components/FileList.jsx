@@ -32,8 +32,6 @@ const FileList = ({
     return <p>Loading...</p>;
   }
 
-
-
   if (viewMode === 'tiles') {
     return (
       <div className="tiles-container">

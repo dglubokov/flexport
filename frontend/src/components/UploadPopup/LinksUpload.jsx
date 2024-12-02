@@ -30,9 +30,9 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
     }
 
     try {
-      const res = await apiHandleLinksUpload(linksToUpload);
+      const res = await apiHandleLinksUpload(linksToUpload, currentPath);
       if (res.ok) {
-        alert('Links upload initiated successfully.');
+        alert('Links are processing. Please check Sessions for progress.');
         fetchFiles(currentPath); // Refresh the file list
         closeUploadPopup();
       } else {
@@ -54,7 +54,7 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
             value={link}
             onChange={(e) => handleLinkChange(e, index)}
           />
-          <button onClick={() => removeLinkField(index)} className="cancel-button" >X</button>
+          <button onClick={() => removeLinkField(index)} className="remove-file-button" >x</button>
         </div>
       ))}
       <div className="links-upload-buttons">

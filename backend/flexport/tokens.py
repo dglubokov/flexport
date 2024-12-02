@@ -11,23 +11,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 600
 DATABASE_PATH = "jwt_tokens.db"
 
 
-def init_db():
-    conn = sqlite3.connect(DATABASE_PATH)
-    cursor = conn.cursor()
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS tokens (
-        token TEXT PRIMARY KEY,
-        username TEXT,
-        expiry DATETIME
-    )
-    """)
-    conn.commit()
-    conn.close()
-
-
-init_db()
-
-
 security = HTTPBearer()
 
 

@@ -6,3 +6,5 @@ python-multipart
 aiofiles
 asyncssh
 aioftp
+aiosqlite
+aiohttp

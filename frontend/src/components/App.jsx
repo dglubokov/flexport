@@ -53,8 +53,6 @@ const App = () => {
 
   const {
     uploadSessions,
-    setUploadSessions,
-    cancelUploadSession,
     deleteUploadSession,
   } = useUploadSessions({
     showUploadSessionsPopup,
@@ -107,6 +105,8 @@ const App = () => {
         showSelection={showSelection}
         setShowSelection={setShowSelection}
         files={files}
+        fetchFiles={fetchFiles}
+        currentPath={currentPath}
       />
 
       <h3>{currentPath}</h3>
@@ -138,8 +138,6 @@ const App = () => {
       {showUploadSessionsPopup && (
         <UploadSessionsPopup
           uploadSessions={uploadSessions}
-          setUploadSessions={setUploadSessions}
-          cancelUploadSession={cancelUploadSession}
           deleteUploadSession={deleteUploadSession}
           closePopup={() => setShowUploadSessionsPopup(false)}
         />

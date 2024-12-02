@@ -1,7 +1,7 @@
 // src/hooks/useUploadSessions.js
 
 import { useState, useEffect } from 'react';
-import { fetchUploadSessions as apiFetchUploadSessions, cancelUploadSession as apiCancelUploadSession, deleteUploadSession as apiDeleteUploadSession } from '../services/api';
+import { fetchUploadSessions as apiFetchUploadSessions, deleteUploadSession as apiDeleteUploadSession } from '../services/api';
 
 const useUploadSessions = ({ showUploadSessionsPopup, credentials }) => {
   const [uploadSessions, setUploadSessions] = useState([]);
@@ -12,16 +12,17 @@ const useUploadSessions = ({ showUploadSessionsPopup, credentials }) => {
       if (res.ok) {
         const data = await res.json();
         const sessions = data.sessions;
-        sessions.forEach((session) => {
-          session.selected = false;
-        });
+
+        // Sort by started_at_unix
+        sessions.sort((a, b) => b.started_at_unix - a.started_at_unix);
+
         setUploadSessions(sessions);
       } else {
-        alert('Error retrieving upload sessions.');
+        alert('Error retrieving upload sessions');
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred while fetching upload sessions.');
+      alert('An error occurred while fetching upload sessions');
     }
   };
 
@@ -34,40 +35,23 @@ const useUploadSessions = ({ showUploadSessionsPopup, credentials }) => {
     return () => clearInterval(interval);
   }, [showUploadSessionsPopup]);
 
-  const cancelUploadSession = async (sessionId) => {
-    try {
-      const res = await apiCancelUploadSession(sessionId);
-      if (res.ok) {
-        alert('Upload session cancelled.');
-        fetchUploadSessions();
-      } else {
-        alert('Error cancelling upload session.');
-      }
-    } catch (error) {
-      console.error(error);
-      alert('An error occurred while cancelling upload session.');
-    }
-  };
-
   const deleteUploadSession = async (sessionId) => {
     try {
       const res = await apiDeleteUploadSession(sessionId);
       if (res.ok) {
-        alert('Upload session deleted.');
+        alert('Upload session deleted');
         fetchUploadSessions();
       } else {
-        alert('Error deleting upload session.');
+        alert('Error deleting upload session');
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred while deleting upload session.');
+      alert('An error occurred while deleting upload session');
     }
   };
 
   return {
     uploadSessions,
-    setUploadSessions,
-    cancelUploadSession,
     deleteUploadSession,
   };
 };
