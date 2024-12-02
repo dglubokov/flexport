@@ -1,6 +1,7 @@
 # flexport
 Flexport is Distributed Web-Based File Manager
 
+![](demo.mp4)
 
 ## Development
 

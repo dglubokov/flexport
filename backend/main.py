@@ -43,7 +43,7 @@ app = FastAPI(
 # CORS Middleware Configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Frontend origin
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -427,7 +427,7 @@ async def download_file_from_link(url, destination, username):
                 async with aiofiles.open(file_path, mode="wb") as f:
                     async for chunk in response.content.iter_chunked(1024):
                         current_session = await get_session(session_id)
-                        if current_session["status"] == SessionStatusEnum.failed or current_session is None:
+                        if current_session[3] == SessionStatusEnum.failed or current_session is None:
                             break
                         await f.write(chunk)
                         await update_session_status(
@@ -436,7 +436,7 @@ async def download_file_from_link(url, destination, username):
                             progress=(await f.tell()) * 100 // int(response.headers["Content-Length"]),
                         )
 
-            if current_session["status"] == SessionStatusEnum.failed or current_session is None:
+            if current_session[3] == SessionStatusEnum.failed or current_session is None:
                 file_path.unlink(missing_ok=True)
             else:
                 await update_session_status(

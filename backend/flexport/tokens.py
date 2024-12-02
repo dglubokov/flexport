@@ -5,11 +5,11 @@ import jwt
 from fastapi import Request, status, HTTPException
 from fastapi.security import HTTPBearer
 
+from flexport.db import DATABASE_PATH
+
 SECRET_KEY = "heiSais2heiSais2"  # Replace with a secure secret key
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 600
-DATABASE_PATH = "jwt_tokens.db"
-
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
 
 security = HTTPBearer()
 

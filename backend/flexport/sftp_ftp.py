@@ -60,7 +60,7 @@ async def download_ftp(
 # ============================================================
 async def list_files_sftp(host, username, password, port=22, path="/"):
     """Asynchronous list of files and directories with metadata from an SFTP server."""
-    async with asyncssh.connect(host, port=port, username=username, password=password) as conn:
+    async with asyncssh.connect(host, port=port, username=username, password=password, known_hosts=None) as conn:
         async with conn.start_sftp_client() as sftp:
             file_metadata = []
             for item in await sftp.listdir(path):
@@ -91,7 +91,7 @@ async def download_sftp(
     try:
         await update_session_status(session_id, SessionStatusEnum.processing)
 
-        async with asyncssh.connect(host, port=port, username=username, password=password) as conn:
+        async with asyncssh.connect(host, port=port, username=username, password=password, known_hosts=None) as conn:
             async with conn.start_sftp_client() as sftp:
 
                 async def download_file(file_path, local_file_path):
