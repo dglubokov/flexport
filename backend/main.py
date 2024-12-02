@@ -246,7 +246,7 @@ async def list_files_ftp_endpoint(credentials: FTPRequest):
     port = credentials.port if credentials.port else 21
     path = credentials.path if credentials.path else "/"
     try:
-        file_list = list_files_ftp(
+        file_list = await list_files_ftp(
             host=credentials.host,
             username=credentials.username,
             password=credentials.password,
@@ -268,7 +268,7 @@ async def list_files_sftp_endpoint(credentials: SFTPRequest):
     port = credentials.port if credentials.port else 22
     path = credentials.path if credentials.path else "/"
     try:
-        file_list = list_files_sftp(
+        file_list = await list_files_sftp(
             host=credentials.host,
             username=credentials.username,
             password=credentials.password,
@@ -288,7 +288,7 @@ async def download_ftp_endpoint(request: FTPDownloadRequest):
     Download a file or folder from an FTP server.
     """
     try:
-        download_ftp(
+        await download_ftp(
             host=request.host,
             username=request.username,
             password=request.password,

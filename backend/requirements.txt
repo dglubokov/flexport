@@ -5,3 +5,4 @@ PyJWT
 python-multipart
 aiofiles
 asyncssh
+aioftp

@@ -11,7 +11,11 @@ const useUploadSessions = ({ showUploadSessionsPopup, credentials }) => {
       const res = await apiFetchUploadSessions(credentials.username);
       if (res.ok) {
         const data = await res.json();
-        setUploadSessions(data.sessions);
+        const sessions = data.sessions;
+        sessions.forEach((session) => {
+          session.selected = false;
+        });
+        setUploadSessions(sessions);
       } else {
         alert('Error retrieving upload sessions.');
       }
@@ -23,7 +27,6 @@ const useUploadSessions = ({ showUploadSessionsPopup, credentials }) => {
 
   useEffect(() => {
     let interval;
-    console.log(`showUploadSessionsPopup: ${showUploadSessionsPopup}`);
     if (showUploadSessionsPopup) {
       fetchUploadSessions();
       interval = setInterval(fetchUploadSessions, 5000); // Refresh every 5 seconds
@@ -63,6 +66,7 @@ const useUploadSessions = ({ showUploadSessionsPopup, credentials }) => {
 
   return {
     uploadSessions,
+    setUploadSessions,
     cancelUploadSession,
     deleteUploadSession,
   };

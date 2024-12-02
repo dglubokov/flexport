@@ -16,16 +16,20 @@ class SessionStatusEnum(str, Enum):
 
 
 class SessionTypeEnum(str, Enum):
-    sftp_download = "sftp_download"
-    ftp_download = "ftp_download"
-    link_download = "link_download"
+    sftp_download = "SFTP Upload"
+    ftp_download = "FTP Upload"
+    link_download = "Link Upload"
 
 
 class SessionStatus(BaseModel):
     session_id: str
     type: SessionTypeEnum
     status: SessionStatusEnum
+    file_name: str = ""
+    uploaded_at: str = ""
+    completed_at: str = ""
     details: str = ""
+    progress: int = 0
 
 
 # Request models for listing and downloading

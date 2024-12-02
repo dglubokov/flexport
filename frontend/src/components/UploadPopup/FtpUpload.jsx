@@ -3,12 +3,14 @@
 import React, { useState } from 'react';
 import { fetchFTPFiles, fetchSFTPFiles, downloadFTPFile, downloadSFTPFile } from '../../services/api';
 import { humanReadableSize } from '../../services/utils';
+import { toast } from 'react-toastify';
+
 
 const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
   const [ftpData, setFtpData] = useState({
-    protocol: 'FTP',
+    protocol: 'SFTP',
     host: '',
-    port: 21,
+    port: 22,
     username: '',
     password: '',
     path: '',
@@ -17,41 +19,22 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
   });
   const [ftpFiles, setFtpFiles] = useState([]);
   const [currentPathRemote, setCurrentPathRemote] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFtpChange = (e) => {
     setFtpData({ ...ftpData, [e.target.name]: e.target.value });
   };
 
-  const handleFTPConnection = async () => {
-    const fetchFiles = ftpData.protocol === 'FTP' ? fetchFTPFiles : fetchSFTPFiles;
-    const res = await fetchFiles({ ...ftpData, path: currentPathRemote });
-    const data = await res.json();
-    const files = data.files;
-
-    // Sort files by type and name
-    files.sort((a, b) => {
-      if (a.type === 'directory' && b.type !== 'directory') return -1;
-      if (a.type !== 'directory' && b.type === 'directory') return 1;
-      if (a.name < b.name) return -1;
-      if (a.name > b.name) return 1;
-      return 0;
-    });
-
-    // Add `selected` property to each file
-    files.forEach((file) => {
-      file.selected = false;
-    });
-
-    setFtpFiles(files);
-  };
-
-  const handleItemClick = async (item) => {
-    if (item.type === 'directory') {
-      const newPath = currentPathRemote ? `${currentPathRemote}/${item.name}` : `/${item.name}`;
-      setCurrentPathRemote(newPath);
+  const handleFetchFiles = async (path) => {
+    setIsLoading(true);
+    try {
       const fetchFiles = ftpData.protocol === 'FTP' ? fetchFTPFiles : fetchSFTPFiles;
+      const res = await fetchFiles({ ...ftpData, path: path });
 
-      const res = await fetchFiles({ ...ftpData, path: newPath });
+      if (!res.ok) {
+        throw new Error('Failed to fetch files from the server.');
+      }
+
       const data = await res.json();
       const files = data.files;
 
@@ -70,9 +53,19 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
       });
 
       setFtpFiles(files);
+  } catch (error) {
+    console.error(error);
+    toast.error('Failed to connect or fetch files from the server.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
-      // Update ftpData
-      setFtpData({ ...ftpData, path: newPath });
+  const handleItemClick = async (item) => {
+    if (item.type === 'directory') {
+      const newPath = currentPathRemote ? `${currentPathRemote}/${item.name}` : `/${item.name}`;
+      setCurrentPathRemote(newPath);
+      handleFetchFiles(newPath);
     }
   };
 
@@ -81,11 +74,6 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
     
     // Iterate over selected files and download them
     for (const file of selectedFiles) {
-      console.log(`Downloading file: ${file.name}`);
-      console.log(ftpData);
-      console.log(currentPathRemote);
-      console.log(currentPath);
-      console.log(credentials.username);
       const res = await (ftpData.protocol === 'FTP' ? downloadFTPFile : downloadSFTPFile)({
         ...ftpData, path: `${currentPathRemote}/${file.name}`, local_path: currentPath, local_user_id: credentials.username,
       });
@@ -111,7 +99,12 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
   if (ftpFiles.length > 0) {
     return (
       <div className="ftp-upload-container">
-        <h3>Files in {currentPathRemote || 'Root'}</h3>
+        {isLoading &&
+        <div className="spinner-container">
+          <div className="spinner"></div>
+        </div>
+        }
+        <h2>Files in {currentPathRemote || 'Root'}</h2>
         <div className="ftp-file-list">
           {ftpFiles.map((file) => (
             <div key={file.name} className="ftp-file-item">
@@ -134,6 +127,7 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
             </div>
           ))}
         </div>
+        <br />
         <button onClick={handleDownloadSelected} className="fancy-button">
           Download Selected
         </button>
@@ -159,7 +153,12 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
 
   return (
     <div className="ftp-upload-container-form">
-      <h3>Upload from Server to Server</h3>
+      {isLoading &&
+        <div className="spinner-container">
+          <div className="spinner"></div>
+        </div>
+      }
+      <h2>Upload from Server to Server</h2>
       <label>
         Protocol:
         <select
@@ -212,7 +211,7 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
         />
       </label>
       <br />
-      <button onClick={handleFTPConnection} className="fancy-button" >Connect</button>
+      <button onClick={() => handleFetchFiles('')} className="fancy-button"> Connect </button>
     </div>
   );
 };

@@ -95,14 +95,6 @@ const DirectUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
                 <button
                   className="remove-file-button"
                   onClick={() => handleRemoveFile(index)}
-                  style={{
-                    marginLeft: '10px',
-                    backgroundColor: 'red',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '5px',
-                    cursor: 'pointer',
-                  }}
                 >
                   x
                 </button>

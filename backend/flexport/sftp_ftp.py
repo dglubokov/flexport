@@ -1,77 +1,90 @@
 import os
 import stat
-import ftplib
-import paramiko
+import time
+
+import aioftp
 import asyncssh
 import aiofiles
 
 from flexport.models import SessionStatusEnum, SessionStatus
 
 
-def list_files_ftp(host, username, password, port=21, path="/"):
-    """List files and directories with metadata from an FTP server."""
+# ==============================
+# FTP
+# ==============================
+
+
+async def list_files_ftp(host, username, password, port=21, path="/"):
+    """Asynchronous list of files and directories with metadata from an FTP server."""
     try:
-        with ftplib.FTP() as ftp:
-            ftp.connect(host, port)
-            ftp.login(username, password)
-            ftp.cwd(path)
+        async with aioftp.Client.context(host, port=port, user=username, password=password) as client:
             file_metadata = []
-
-            # Use MLSD if supported for more detailed file info
-            try:
-                ftp.sendcmd("TYPE I")  # Set binary transfer mode for size calculation
-                file_metadata = [
-                    {"name": entry[0], "type": entry[1].get("type", "unknown"), "size": entry[1].get("size", 0)}
-                    for entry in ftp.mlsd(path)
-                ]
-            except ftplib.error_perm:
-                # Fallback if MLSD is not supported
-                file_metadata = [{"name": filename, "type": "unknown"} for filename in ftp.nlst()]
-
+            async for path_info in client.list(path, recursive=False):
+                file_metadata.append(
+                    {
+                        "name": path_info["name"],
+                        "type": "directory" if path_info["type"] == "dir" else "file",
+                        "size": path_info.get("size", 0),
+                        "modified_time": path_info.get("modify"),
+                    }
+                )
             return file_metadata
-    except ftplib.all_errors as e:
+    except Exception as e:
         print(f"FTP error: {e}")
         return None
 
 
-def list_files_sftp(host, username, password, port=22, path="/"):
-    """List files and directories with metadata from an SFTP server."""
+async def download_ftp(
+    sessions: dict[str, list[SessionStatus]],
+    host: str,
+    username: str,
+    password: str,
+    remote_path: str,
+    local_path: str,
+    session_id: str,
+    local_user_id: str,
+    port: int = 21,
+):
+    """Asynchronous file download using FTP."""
     try:
-        transport = paramiko.Transport((host, port))
-        transport.connect(username=username, password=password)
-        sftp = paramiko.SFTPClient.from_transport(transport)
-        file_metadata = []
+        session = next(s for s in sessions[local_user_id] if s.session_id == session_id)
+        session.status = SessionStatusEnum.processing
 
-        for item in sftp.listdir_attr(path):
-            file_metadata.append(
-                {
-                    "name": item.filename,
-                    "type": "directory" if stat.S_ISDIR(item.st_mode) else "file",
-                    "size": item.st_size,
-                    "modified_time": item.st_mtime,
-                    "permissions": oct(item.st_mode),
-                }
-            )
+        async with aioftp.Client.context(host, port=port, user=username, password=password) as client:
+            async with aiofiles.open(local_path, "wb") as local_file:
+                async for block in client.download_stream(remote_path):
+                    await local_file.write(block)
 
-        sftp.close()
-        transport.close()
-        return file_metadata
-    except paramiko.SSHException as e:
-        print(f"SFTP error: {e}")
-        return None
+        session.status = SessionStatusEnum.completed
+        session.details = f"Downloaded {remote_path} to {local_path}."
+    except Exception as e:
+        session.status = SessionStatusEnum.failed
+        session.details = str(e)
 
 
-def download_ftp(host, username, password, remote_path, local_path, port=21):
-    """Download a file or folder from an FTP server."""
-    try:
-        with ftplib.FTP() as ftp:
-            ftp.connect(host, port)
-            ftp.login(username, password)
-            with open(local_path, "wb") as f:
-                ftp.retrbinary(f"RETR {remote_path}", f.write)
-        print(f"Downloaded {remote_path} to {local_path}.")
-    except ftplib.all_errors as e:
-        print(f"FTP error: {e}")
+# ==============================
+# SFTP
+# ==============================
+
+
+async def list_files_sftp(host, username, password, port=22, path="/"):
+    """Asynchronous list of files and directories with metadata from an SFTP server."""
+    async with asyncssh.connect(host, port=port, username=username, password=password) as conn:
+        async with conn.start_sftp_client() as sftp:
+            file_metadata = []
+            for item in await sftp.listdir(path):
+                item_path = os.path.join(path, item).replace("\\", "/")
+                stat_item = await sftp.stat(item_path)
+                file_metadata.append(
+                    {
+                        "name": item,
+                        "type": "directory" if stat.S_ISDIR(stat_item.permissions) else "file",
+                        "size": stat_item.size,
+                        "modified_time": stat_item.mtime,
+                        "permissions": oct(stat_item.permissions),
+                    }
+                )
+            return file_metadata
 
 
 async def download_sftp(
@@ -89,11 +102,25 @@ async def download_sftp(
     try:
         session = next(s for s in sessions[local_user_id] if s.session_id == session_id)
         session.status = SessionStatusEnum.processing
+        session.file_name = os.path.basename(remote_path)
+        session.uploaded_at = remote_path
 
         async with asyncssh.connect(host, port=port, username=username, password=password) as conn:
             async with conn.start_sftp_client() as sftp:
 
+                async def calculate_total_size(path):
+                    if await sftp.isdir(path):
+                        size = 0
+                        for item in await sftp.listdir(path):
+                            remote_item_path = os.path.join(path, item).replace("\\", "/")
+                            size += await calculate_total_size(remote_item_path)
+                        return size
+                    else:
+                        return (await sftp.stat(path)).size
+
                 async def download_file(file_path, local_file_path):
+                    processed_size = 0
+                    total_size = await calculate_total_size(file_path)
                     async with aiofiles.open(local_file_path, "wb") as local_file:
                         async with sftp.open(file_path, "rb") as remote_file:
                             while True:
@@ -101,6 +128,8 @@ async def download_sftp(
                                 if not chunk:
                                     break
                                 await local_file.write(chunk)
+                                processed_size += len(chunk)
+                                session.progress = round((processed_size / total_size) * 100, 2)
 
                 async def download_folder(folder_path, local_folder_path):
                     os.makedirs(local_folder_path, exist_ok=True)
@@ -121,6 +150,7 @@ async def download_sftp(
 
         session.status = SessionStatusEnum.completed
         session.details = f"Downloaded {remote_path} to {local_path}."
+        session.completed_at = time.strftime("%Y-%m-%d %H:%M:%S")
     except Exception as e:
         session.status = SessionStatusEnum.failed
         session.details = str(e)

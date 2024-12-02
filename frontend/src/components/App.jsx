@@ -10,6 +10,8 @@ import FileList from './FileList';
 import UploadPopup from './UploadPopup/UploadPopup';
 import UploadSessionsPopup from './UploadSessionsPopup';
 import { humanReadableSize } from '../services/utils';
+import { ToastContainer } from 'react-toastify';
+import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
   const {
@@ -48,10 +50,10 @@ const App = () => {
   const [showHidden, setShowHidden] = useState(false);
   const [showUploadPopup, setShowUploadPopup] = useState(false);
   const [showUploadSessionsPopup, setShowUploadSessionsPopup] = useState(false);
-  const [showFinishedSessions, setShowFinishedSessions] = useState(false);
 
   const {
     uploadSessions,
+    setUploadSessions,
     cancelUploadSession,
     deleteUploadSession,
   } = useUploadSessions({
@@ -90,6 +92,8 @@ const App = () => {
   }
 
   return (
+    <>
+    <ToastContainer />
     <div className="files-container">
       <Navbar
         credentials={credentials}
@@ -134,10 +138,9 @@ const App = () => {
       {showUploadSessionsPopup && (
         <UploadSessionsPopup
           uploadSessions={uploadSessions}
+          setUploadSessions={setUploadSessions}
           cancelUploadSession={cancelUploadSession}
           deleteUploadSession={deleteUploadSession}
-          showFinishedSessions={showFinishedSessions}
-          setShowFinishedSessions={setShowFinishedSessions}
           closePopup={() => setShowUploadSessionsPopup(false)}
         />
       )}
@@ -154,6 +157,7 @@ const App = () => {
         showSelection={showSelection}
       />
     </div>
+    </>
   );
 };
 

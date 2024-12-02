@@ -162,6 +162,19 @@ h2 {
   border-color: #ef4444;
 }
 
+.remove-file-button {
+  margin-left: 10px;
+  background-color: #cd4040;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.remove-file-button:hover {
+  background-color: #dc2626;
+}
+
 .selection-buttons {
   gap: 10px;
   margin-right: 10px;
@@ -279,11 +292,9 @@ h2 {
 }
 
 .file-checkbox {
-  position: absolute;
-  right: 170px;
-  margin-top: 10px;
-  width: 20px;
-  height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .file-checkbox label {
@@ -367,33 +378,33 @@ button + button {
 }
 
 .modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(17, 24, 39, 0.8); /* Darker overlay for better contrast */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(17, 24, 39, 0.8); /* Darker overlay for better contrast */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .upload-popup {
-    background-color: #ffffff;
-    padding: 50px;
-    border-radius: 16px;
-    width: 500px;
-    max-width: 90%;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
-    position: relative;
-    text-align: center;
+  background-color: #ffffff;
+  padding: 50px;
+  border-radius: 16px;
+  width: 500px;
+  max-width: 90%;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  position: relative;
+  text-align: center;
 }
 
 .upload-popup-container {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .upload-option {
@@ -499,9 +510,10 @@ button + button {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid #ddd;
+  border: 1px solid #d1d5db;
   border-radius: 4px;
   padding: 10px;
+  margin-top: 10px;
   margin-bottom: 10px;
 }
 
@@ -517,13 +529,19 @@ button + button {
 }
 
 .session-status {
-  font-size: 12px;
   color: #555;
 }
 
 .session-details {
-  font-size: 12px;
-  color: #555;
+  position: fixed;
+  transform: translate(17%, -40%);
+  z-index: 2000;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 50px;
+  border-radius: 16px;
+  width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(5px);
 }
 
 .session-item-finished {
@@ -540,27 +558,73 @@ button + button {
   gap: 10px;
 }
 
-.action-button {
-  border: none;
-  border-radius: 4px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
 .session-queued {
-  color: #f59e0b;
+  background-color: #f59e0b;
 }
 
 .session-processing {
-  color: #2563eb;
+  background-color: rgba(59, 130, 246, 0.1);
 }
 
 .session-completed {
-  color: #10b981;
+  /* Green transparent background */
+  background-color: rgba(43, 170, 58, 0.2);
 }
 
 .session-failed {
-  color: #ef4444;
+  background-color: #ef4444;
+}
+
+.session-details-button {
+  padding: 5px 10px;
+  background: #f3f4f6;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.session-details-button:hover {
+  background: #e5e7eb;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.session-progress-container {
+  width: 100%;
+  background-color: #f3f3f3;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 20px;
+  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+  position: relative;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.session-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #34d399, #059669);
+  background-size: 200% 100%; /* Larger background for wave motion */
+  animation: wave-effect 1.5s linear infinite; /* Continuous wave animation */
+  transition: width 0.4s ease; /* Smooth width transition */
+  position: relative;
+}
+
+/* Percentage Text */
+.session-progress-text {
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+/* Wave Animation */
+@keyframes wave-effect {
+  0% {
+    background-position: 200% 0; /* Start at the right */
+  }
+  100% {
+    background-position: -200% 0; /* Move to the left */
+  }
 }
 
 
@@ -806,6 +870,45 @@ button + button {
   padding: 10px;
   border-bottom: 1px solid #ccc;
 }
+
+/* Container styling for the spinner */
+.spinner-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(17, 24, 39, 0.8); /* Darker overlay for better contrast */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Advanced bordered circular spinner styling */
+.spinner {
+  width: 60px; /* Spinner size */
+  height: 60px; 
+  border: 6px solid transparent; /* Transparent base */
+  border-top: 6px solid #6D5BBA; /* Color for the top border */
+  border-right: 6px solid #8D58BF; /* Color for the right border */
+  border-radius: 50%; /* Circular shape */
+  animation: spin 1.2s linear infinite; /* Smooth spinning */
+  box-shadow: 
+    0 0 15px rgba(109, 91, 186, 0.5), /* Outer glow */
+    0 0 30px rgba(141, 88, 191, 0.4); /* Diffused glow */
+}
+
+/* Keyframes for spinning animation */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg); /* Start position */
+  }
+  100% {
+    transform: rotate(360deg); /* End position */
+  }
+}
+
 
 /* Responsive Design */
 @media (max-width: 770px) {

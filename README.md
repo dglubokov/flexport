@@ -36,6 +36,10 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 ## TODO
 
+### Navbar
+    - Download selected
+    - Delete selected
+
 ### Direct Upload
     - Progress bar improvement
 
@@ -46,7 +50,5 @@ uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 
 ### Sessions
     - DB based session management
-    - Async downloading test
     - FTP test
-    - SFTP test
     - Link based upload test
