@@ -108,7 +108,7 @@ def list_files(path: str = "", current_user: str = Depends(get_current_user)):
     """
     List files and directories in the specified path.
     """
-    target_path = Path(path).resolve() if path else Path.home()
+    target_path = Path(path).resolve() if path != "" else Path(f"/home/{current_user}")
 
     if not target_path.exists() or not target_path.is_dir():
         raise HTTPException(
@@ -119,7 +119,7 @@ def list_files(path: str = "", current_user: str = Depends(get_current_user)):
     if not has_access_to_path(target_path, current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this directory",
+            detail=f"You don't have permission to access {target_path}",
         )
 
     try:
@@ -152,12 +152,12 @@ def check_available_space_on_disk(path: str = "", current_user: str = Depends(ge
     """
     Check available, used, and total space for the given path.
     """
-    target_path = Path(path).resolve() if path else Path.home()
+    target_path = Path(path).resolve() if path != "" else Path(f"/home/{current_user}")
 
     if not has_access_to_path(target_path, current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="You don't have permission to access this directory",
+            detail=f"You don't have permission to access {target_path}",
         )
 
     try:

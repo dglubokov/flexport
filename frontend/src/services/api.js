@@ -1,6 +1,6 @@
 // src/services/api.js
 
-const API_BASE_URL = 'http://0.0.0.0:8009';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 export const login = async (credentials) => {
   const res = await fetch(`${API_BASE_URL}/login`, {

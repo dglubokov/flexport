@@ -1,7 +1,20 @@
 # flexport
 Flexport is Distributed Web-Based File Manager
 
-![](demo.mp4)
+## Deployment
+
+First of all you should put this repo to the root accessable directory of your server.
+
+You also should run this app from root, because of PAM authentication.
+
+### Frontend
+
+TODO
+
+### Backend
+
+TODO
+
 
 ## Development
 
@@ -41,4 +54,5 @@ uvicorn main:app --host 0.0.0.0 --port 8009 --reload
 - Structurize code
 - Add tests
 - Add deployment instructions and scripts
-
+- Fix some bad CSS
+- Handle folder management
