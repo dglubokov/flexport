@@ -2,9 +2,11 @@
 
 import React, { useState } from 'react';
 import { handleLinksUpload as apiHandleLinksUpload } from '../../services/api';
+import { toast } from 'react-toastify';  // Add toast for better feedback
 
 const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
   const [linkList, setLinkList] = useState(['']);
+  const [isUploading, setIsUploading] = useState(false);
 
   const handleLinkChange = (e, index) => {
     const newLinks = [...linkList];
@@ -25,22 +27,27 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
   const handleLinksUpload = async () => {
     const linksToUpload = linkList.filter((link) => link.trim() !== '');
     if (linksToUpload.length === 0) {
-      alert('Please add at least one link.');
+      toast.warning('Please add at least one link.');
       return;
     }
 
+    setIsUploading(true);
+    
     try {
       const res = await apiHandleLinksUpload(linksToUpload, currentPath);
       if (res.ok) {
-        alert('Links are processing. Please check Sessions for progress.');
+        toast.success('Links are processing. Please check Sessions for progress.');
         fetchFiles(currentPath); // Refresh the file list
         closeUploadPopup();
       } else {
-        alert('Error initiating links upload.');
+        const errorData = await res.json();
+        toast.error(`Error initiating links upload: ${errorData.detail || 'Unknown error'}`);
       }
     } catch (error) {
       console.error(error);
-      alert('An error occurred during links upload.');
+      toast.error('An error occurred during links upload.');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -53,13 +60,26 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
             type="text"
             value={link}
             onChange={(e) => handleLinkChange(e, index)}
+            placeholder="Enter URL (e.g., https://example.com/file.txt)"
           />
-          <button onClick={() => removeLinkField(index)} className="remove-file-button" >x</button>
+          <button 
+            onClick={() => removeLinkField(index)} 
+            className="remove-file-button"
+            disabled={linkList.length === 1}
+          >
+            x
+          </button>
         </div>
       ))}
       <div className="links-upload-buttons">
-        <button onClick={addLinkField} className="fancy-button" >Add Link</button>
-        <button onClick={handleLinksUpload} className="fancy-button" >Upload</button>
+        <button onClick={addLinkField} className="fancy-button">Add Link</button>
+        <button 
+          onClick={handleLinksUpload} 
+          className="fancy-button"
+          disabled={isUploading}
+        >
+          {isUploading ? 'Uploading...' : 'Upload'}
+        </button>
       </div>
     </div>
   );

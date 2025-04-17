@@ -1,9 +1,6 @@
 // src/components/App.jsx
-
-import React, { useState, useEffect } from 'react';
-import useAuth from '../hooks/useAuth';
-import useFileManager from '../hooks/useFileManager';
-import useUploadSessions from '../hooks/useUploadSessions';
+import React from 'react';
+import { useAppContext } from '../context/AppContext';
 import LoginForm from './LoginForm';
 import Navbar from './Navbar';
 import FileList from './FileList';
@@ -20,65 +17,25 @@ const App = () => {
     handleAuthInputChange,
     handleLogin,
     handleLogout,
-    checkAuthStatus,
-  } = useAuth();
-
-  useEffect(() => {
-    checkAuthStatus();
-  }, []);
-
-  const {
+    loading,
     files,
     setFiles,
     currentPath,
-    loading,
     spaceInfo,
-    fetchSpaceInfo,
     fetchFiles,
+    viewMode,
+    setViewMode,
+    showHidden,
+    toggleHiddenFiles,
     showSelection,
     setShowSelection,
-  } = useFileManager();
-
-  useEffect(() => {
-    if (isAuthenticated) {
-      fetchFiles();
-      fetchSpaceInfo();
-    }
-  }, [isAuthenticated]);
-
-  const [viewMode, setViewMode] = useState('list');
-  const [showHidden, setShowHidden] = useState(false);
-  const [showUploadPopup, setShowUploadPopup] = useState(false);
-  const [showUploadSessionsPopup, setShowUploadSessionsPopup] = useState(false);
-
-  const {
-    uploadSessions,
-    deleteUploadSession,
-  } = useUploadSessions({
+    showUploadPopup,
+    setShowUploadPopup,
     showUploadSessionsPopup,
-    credentials
-  });
-
-  // ---------------------------------------------
-  // Handle functions
-  // ---------------------------------------------
-
-  const toggleHiddenFiles = () => {
-    setShowHidden(!showHidden);
-  };
-
-  const goBack = () => {
-    if (currentPath) {
-      const pathParts = currentPath.split('/');
-      pathParts.pop();
-      const newPath = pathParts.join('/');
-      fetchFiles(newPath);
-    } 
-  };
-
-  // ---------------------------------------------
-  // Components
-  // ---------------------------------------------
+    setShowUploadSessionsPopup,
+    uploadSessions,
+    deleteUploadSession
+  } = useAppContext();
 
   if (!isAuthenticated) {
     return <LoginForm
@@ -91,70 +48,77 @@ const App = () => {
 
   return (
     <>
-    <ToastContainer />
-    <div className="files-container">
-      <Navbar
-        credentials={credentials}
-        viewMode={viewMode}
-        setViewMode={setViewMode}
-        showHidden={showHidden}
-        toggleHiddenFiles={toggleHiddenFiles}
-        logout={handleLogout}
-        setShowUploadPopup={setShowUploadPopup}
-        setShowUploadSessionsPopup={setShowUploadSessionsPopup}
-        showSelection={showSelection}
-        setShowSelection={setShowSelection}
-        files={files}
-        fetchFiles={fetchFiles}
-        currentPath={currentPath}
-      />
+      <ToastContainer />
+      <div className="files-container">
+        <Navbar
+          credentials={credentials}
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          showHidden={showHidden}
+          toggleHiddenFiles={toggleHiddenFiles}
+          logout={handleLogout}
+          setShowUploadPopup={setShowUploadPopup}
+          setShowUploadSessionsPopup={setShowUploadSessionsPopup}
+          showSelection={showSelection}
+          setShowSelection={setShowSelection}
+          files={files}
+          fetchFiles={fetchFiles}
+          currentPath={currentPath}
+        />
 
-      <h3>{currentPath}</h3>
-      <div className="space-info-main-container">
-        <div className="space-info">
-          <div className="space-bar-container">
-            <div
-              className="space-bar-used"
-              style={{ width: `${(spaceInfo.used_space / spaceInfo.total_space) * 100}%` }}
-            >
-              {humanReadableSize(spaceInfo.used_space)} / {humanReadableSize(spaceInfo.total_space)}
+        <h3>{currentPath}</h3>
+        <div className="space-info-main-container">
+          <div className="space-info">
+            <div className="space-bar-container">
+              <div
+                className="space-bar-used"
+                style={{ width: `${(spaceInfo.used_space / spaceInfo.total_space) * 100}%` }}
+              >
+                {humanReadableSize(spaceInfo.used_space)} / {humanReadableSize(spaceInfo.total_space)}
+              </div>
             </div>
+            <p className="available-space">
+              <span>Available:</span> {humanReadableSize(spaceInfo.available_space)}
+            </p>
           </div>
-          <p className="available-space">
-            <span>Available:</span> {humanReadableSize(spaceInfo.available_space)}
-          </p>
         </div>
-      </div>
 
-      {showUploadPopup && (
-        <UploadPopup
-          closeUploadPopup={() => setShowUploadPopup(false)}
+        {showUploadPopup && (
+          <UploadPopup
+            closeUploadPopup={() => setShowUploadPopup(false)}
+            currentPath={currentPath}
+            fetchFiles={fetchFiles}
+            credentials={credentials}
+          />
+        )}
+
+        {showUploadSessionsPopup && (
+          <UploadSessionsPopup
+            uploadSessions={uploadSessions}
+            deleteUploadSession={deleteUploadSession}
+            closePopup={() => setShowUploadSessionsPopup(false)}
+          />
+        )}
+
+        <FileList
           currentPath={currentPath}
           fetchFiles={fetchFiles}
-          credentials={credentials}
+          files={files}
+          setFiles={setFiles}
+          goBack={() => {
+            if (currentPath) {
+              const pathParts = currentPath.split('/');
+              pathParts.pop();
+              const newPath = pathParts.join('/');
+              fetchFiles(newPath);
+            }
+          }}
+          showHidden={showHidden}
+          viewMode={viewMode}
+          loading={loading}
+          showSelection={showSelection}
         />
-      )}
-
-      {showUploadSessionsPopup && (
-        <UploadSessionsPopup
-          uploadSessions={uploadSessions}
-          deleteUploadSession={deleteUploadSession}
-          closePopup={() => setShowUploadSessionsPopup(false)}
-        />
-      )}
-
-      <FileList
-        currentPath={currentPath}
-        fetchFiles={fetchFiles}
-        files={files}
-        setFiles={setFiles}
-        goBack={goBack}
-        showHidden={showHidden}
-        viewMode={viewMode}
-        loading={loading}
-        showSelection={showSelection}
-      />
-    </div>
+      </div>
     </>
   );
 };

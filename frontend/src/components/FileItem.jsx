@@ -54,13 +54,27 @@ const FileItem = ({ item, handleItemClick, viewMode, showSelection, handleSelect
   
     return date.toLocaleString('en-US', options);
   };
+  
+  // Handler for checkbox click to prevent event propagation
+  const handleCheckboxClick = (e) => {
+    e.stopPropagation();
+    handleSelection();
+  };
 
   if (viewMode === 'tiles') {
     return (
-      <div
-        className={`tile ${item.is_dir ? 'directory' : 'file'}`}
-        onClick={() => handleItemClick(item)}
-      >
+      <div className={`tile ${item.is_dir ? 'directory' : 'file'}`} onClick={() => handleItemClick(item)}>
+        {/* Only show checkbox for files when in selection mode */}
+        {showSelection && !item.is_dir && (
+          <div className="file-checkbox-container" onClick={handleCheckboxClick}>
+            <input
+              type="checkbox"
+              checked={item.selected || false}
+              onChange={handleCheckboxClick}
+              className="file-checkbox"
+            />
+          </div>
+        )}
         <div className="file-icon">{item.is_dir ? '🗂️' : '📄'}</div>
         <div className="tile-name">{item.name}</div>
         <div className="tile-size">{humanReadableSize(item.size)}</div>
@@ -68,30 +82,32 @@ const FileItem = ({ item, handleItemClick, viewMode, showSelection, handleSelect
     );
   } else {
     return (
-      <div>
-      {showSelection && item.is_file && (
-        <input
-          type="checkbox"
-          checked={item.selected}
-          onChange={() => handleSelection(item)}
-          className='file-checkbox'
-        />
-      )}
+      <div className="file-row">
+        {/* Only show checkbox for files when in selection mode */}
+        {showSelection && !item.is_dir && (
+          <div className="file-checkbox-container" onClick={handleCheckboxClick}>
+            <input
+              type="checkbox"
+              checked={item.selected || false}
+              onChange={handleCheckboxClick}
+              className="file-checkbox"
+            />
+          </div>
+        )}
         <li
-        className={`file-item ${item.is_dir ? 'directory' : 'file'}`}
-        onClick={() => handleItemClick(item)}
-        key={item.name}
-      >
-        <span className="file-permissions">
-          {formatPermissions(item.permissions, item.is_dir)}
-        </span>
-        <span className="file-owner">{item.owner}</span>
-        <span className="file-group">{item.group}</span>
-        <span className="file-size">{humanReadableSize(item.size)}</span>
-        <span className="file-date">{formatDateModified(item.date_modified)}</span>
-        <span className="file-name">{item.is_dir ? '🗂️' : '📄'} {item.name}</span>
-      </li>
-    </div>
+          className={`file-item ${item.is_dir ? 'directory' : 'file'}`}
+          onClick={() => handleItemClick(item)}
+        >
+          <span className="file-permissions">
+            {formatPermissions(item.permissions, item.is_dir)}
+          </span>
+          <span className="file-owner">{item.owner}</span>
+          <span className="file-group">{item.group}</span>
+          <span className="file-size">{humanReadableSize(item.size)}</span>
+          <span className="file-date">{formatDateModified(item.date_modified)}</span>
+          <span className="file-name">{item.is_dir ? '🗂️' : '📄'} {item.name}</span>
+        </li>
+      </div>
     );
   }
 };
