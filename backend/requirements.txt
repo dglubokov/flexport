@@ -9,3 +9,4 @@ aioftp
 aiosqlite
 aiohttp
 six
+python-dotenv

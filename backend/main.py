@@ -5,10 +5,11 @@ import aiohttp
 import aiofiles
 from pathlib import Path
 
-from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile, Form, Request, BackgroundTasks
+from fastapi import FastAPI, HTTPException, status, Depends, File, UploadFile, Form, Request, BackgroundTasks, Query
 from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2AuthorizationCodeBearer
+from dotenv import load_dotenv
 
 from flexport.tokens import create_access_token, get_current_user, remove_token
 from flexport.utils import authenticate_user, has_access_to_path
@@ -41,9 +42,11 @@ app = FastAPI(
 
 
 # CORS Middleware Configuration
+load_dotenv()
+ORIGIN = os.getenv("ORIGIN")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[ORIGIN] if ORIGIN else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -104,7 +107,12 @@ def check_token(request: Request):
 # File Endpoints
 # ==================================================================
 @app.get("/list_files")
-def list_files(path: str = "", current_user: str = Depends(get_current_user)):
+def list_files(
+    path: str = "", 
+    page: int = Query(1, ge=1),
+    page_size: int = Query(100, ge=1, le=1000),
+    current_user: str = Depends(get_current_user)
+):
     """
     List files and directories in the specified path.
     """
@@ -123,23 +131,44 @@ def list_files(path: str = "", current_user: str = Depends(get_current_user)):
         )
 
     try:
-        items = [
-            {
-                "name": item.name,
-                "is_file": item.is_file(),
-                "is_dir": item.is_dir(),
-                "size": item.stat().st_size,
-                "owner": item.owner(),
-                "group": item.group(),
-                "date_created": item.stat().st_ctime,
-                "date_modified": item.stat().st_mtime,
-                "permissions": oct(item.stat().st_mode & 0o777),
-                "path": str(item),
+        all_items = []
+        for item in target_path.iterdir():
+            if not isinstance(item, PermissionError) and item.exists():
+                all_items.append({
+                    "name": item.name,
+                    "is_file": item.is_file(),
+                    "is_dir": item.is_dir(),
+                    "size": item.stat().st_size,
+                    "owner": item.owner(),
+                    "group": item.group(),
+                    "date_created": item.stat().st_ctime,
+                    "date_modified": item.stat().st_mtime,
+                    "permissions": oct(item.stat().st_mode & 0o777),
+                    "path": str(item),
+                })
+        
+        # Sort items (directories first, then by name)
+        sorted_items = sorted(all_items, key=lambda x: (not x["is_dir"], x["name"]))
+        
+        # Calculate total items and pages
+        total_items = len(sorted_items)
+        total_pages = (total_items + page_size - 1) // page_size
+        
+        # Get the current page of items
+        start_idx = (page - 1) * page_size
+        end_idx = start_idx + page_size
+        page_items = sorted_items[start_idx:end_idx]
+        
+        return {
+            "items": page_items,
+            "current_path": str(target_path),
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "total_items": total_items,
+                "total_pages": total_pages
             }
-            for item in target_path.iterdir()
-            if not isinstance(item, PermissionError) and item.exists()
-        ]
-        return {"items": sorted(items, key=lambda x: (not x["is_dir"], x["name"])), "current_path": str(target_path)}
+        }
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -194,15 +223,17 @@ async def upload_files(
     if not file.filename:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="No file selected.")
 
-    file_content = await file.read()
-    if len(file_content) > MAX_FILE_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File exceeds maximum size of {MAX_FILE_SIZE} bytes.",
-        )
-
-    with open(upload_dir / file.filename, "wb") as buffer:
-        buffer.write(file_content)
+    file_path = upload_dir / file.filename
+    
+    # Stream the file to disk instead of loading it all into memory
+    async with aiofiles.open(file_path, "wb") as buffer:
+        # Read and write in chunks
+        chunk_size = 64 * 1024  # 64KB chunks
+        while True:
+            chunk = await file.read(chunk_size)
+            if not chunk:
+                break
+            await buffer.write(chunk)
 
     return {"message": "File uploaded successfully.", "uploaded_file": file.filename}
 
@@ -410,7 +441,7 @@ async def download_file_from_link(url, destination, username):
     session_id = str(uuid.uuid4())
     session = SessionStatus(
         session_id=session_id,
-        type=SessionTypeEnum.sftp_download,
+        type=SessionTypeEnum.link_download,  # FIXED: Using correct enum type
         status=SessionStatusEnum.queued,
         file_name=file_name,
         started_at=time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -421,30 +452,59 @@ async def download_file_from_link(url, destination, username):
     )
     await create_session(session)
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url) as response:
+                if response.status != 200:
+                    await update_session_status(
+                        session_id, 
+                        status=SessionStatusEnum.failed, 
+                        details=f"Failed to download file. Status: {response.status}"
+                    )
+                    return
+                
+                total_size = int(response.headers.get("Content-Length", 0))
+                downloaded_size = 0
+                
                 async with aiofiles.open(file_path, mode="wb") as f:
-                    async for chunk in response.content.iter_chunked(1024):
+                    async for chunk in response.content.iter_chunked(1024 * 64):  # 64KB chunks
                         current_session = await get_session(session_id)
-                        if current_session[3] == SessionStatusEnum.failed or current_session is None:
+                        if current_session is None or current_session[3] == SessionStatusEnum.failed:
+                            # If session was removed or marked as failed, abort
                             break
+                            
                         await f.write(chunk)
-                        await update_session_status(
-                            session_id,
-                            status=SessionStatusEnum.processing,
-                            progress=(await f.tell()) * 100 // int(response.headers["Content-Length"]),
-                        )
-
-            if current_session[3] == SessionStatusEnum.failed or current_session is None:
-                file_path.unlink(missing_ok=True)
-            else:
-                await update_session_status(
-                    session_id, status=SessionStatusEnum.failed, details="Failed to download file."
-                )
-                return
-
-    await update_session_status(session_id, status=SessionStatusEnum.completed)
+                        downloaded_size += len(chunk)
+                        
+                        # Update progress if we know the total size
+                        if total_size > 0:
+                            progress = int((downloaded_size / total_size) * 100)
+                            await update_session_status(
+                                session_id,
+                                status=SessionStatusEnum.processing,
+                                progress=progress,
+                            )
+                
+                # Check if the session still exists and wasn't cancelled
+                current_session = await get_session(session_id)
+                if current_session is None or current_session[3] == SessionStatusEnum.failed:
+                    # If session was removed or marked as failed, remove the partial file
+                    file_path.unlink(missing_ok=True)
+                    return
+                
+                # Mark session as completed
+                await update_session_status(session_id, status=SessionStatusEnum.completed)
+                
+    except Exception as e:
+        # Handle any exceptions
+        await update_session_status(
+            session_id, 
+            status=SessionStatusEnum.failed, 
+            details=f"Error downloading file: {str(e)}"
+        )
+        # Remove partial file if it exists
+        if file_path.exists():
+            file_path.unlink()
 
 
 @app.post("/links_upload/")
@@ -472,7 +532,73 @@ async def upload_files_from_links(
     return {"message": "Files are being downloaded and uploaded."}
 
 
+# main.py - Add a search endpoint
+@app.get("/search_files")
+def search_files(
+    query: str,
+    path: str = "",
+    current_user: str = Depends(get_current_user)
+):
+    """
+    Search for files matching the query in the specified path.
+    """
+    target_path = Path(path).resolve() if path != "" else Path(f"/home/{current_user}")
+
+    if not target_path.exists() or not target_path.is_dir():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Directory not found",
+        )
+
+    if not has_access_to_path(target_path, current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"You don't have permission to access {target_path}",
+        )
+
+    try:
+        search_results = []
+        
+        # Recursive search function
+        def search_directory(directory):
+            for item in directory.iterdir():
+                if not isinstance(item, PermissionError) and item.exists():
+                    # Check if name matches search query
+                    if query.lower() in item.name.lower():
+                        search_results.append({
+                            "name": item.name,
+                            "is_file": item.is_file(),
+                            "is_dir": item.is_dir(),
+                            "size": item.stat().st_size,
+                            "owner": item.owner(),
+                            "group": item.group(),
+                            "date_created": item.stat().st_ctime,
+                            "date_modified": item.stat().st_mtime,
+                            "permissions": oct(item.stat().st_mode & 0o777),
+                            "path": str(item),
+                        })
+                    
+                    # Recursively search directories
+                    if item.is_dir() and has_access_to_path(item, current_user):
+                        search_directory(item)
+        
+        # Start recursive search
+        search_directory(target_path)
+        
+        return {
+            "items": sorted(search_results, key=lambda x: (not x["is_dir"], x["name"])),
+            "current_path": str(target_path),
+            "query": query
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
+
+
 if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run(app, host="0.0.0.0", port=8009)
+

@@ -1,14 +1,24 @@
+import os
 import datetime
 
 import sqlite3
 import jwt
 from fastapi import Request, status, HTTPException
 from fastapi.security import HTTPBearer
+from dotenv import load_dotenv
 
 from flexport.db import DATABASE_PATH
 
 
-SECRET_KEY = "heiSais2heiSais2"  # Replace with a secure secret key
+# Use environment variable or fallback to a default (only for development)
+load_dotenv()
+SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not SECRET_KEY:
+    if os.getenv("ENVIRONMENT") == "production":
+        raise ValueError("JWT_SECRET_KEY must be set in production")
+    SECRET_KEY = "heiSais2heiSais2"  # Only used in development
+
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 600
 
