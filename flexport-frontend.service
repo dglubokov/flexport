@@ -1,0 +1,17 @@
+[Unit]
+Description=FlexPort Frontend Service
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/opt/flexport/frontend
+ExecStart=/usr/bin/npx serve -s dist -l 3000
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=flexport-frontend
+
+[Install]
+WantedBy=multi-user.target

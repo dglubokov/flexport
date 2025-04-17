@@ -1,0 +1,24 @@
+FROM node:23-alpine
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy all frontend files
+COPY frontend/ .
+
+# Build the application
+RUN npm run build
+
+# Install a simple server to serve static files
+RUN npm install -g serve
+
+# Expose the port
+EXPOSE 3000
+
+# Start the server
+CMD ["serve", "-s", "dist", "-l", "3000"]

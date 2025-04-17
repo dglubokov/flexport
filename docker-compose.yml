@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: ./backend-dockerfile
+    container_name: flexport-backend
+    restart: unless-stopped
+    ports:
+      - "8009:8009"
+    volumes:
+      - /home:/home  # Mount the home directory for file access
+      - ./backend:/app  # For development, mount the source code
+    environment:
+      - JWT_SECRET_KEY=change_this_to_a_secure_random_string  # Change this in production!
+    
+  frontend:
+    build:
+      context: .
+      dockerfile: ./frontend-dockerfile
+    container_name: flexport-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
