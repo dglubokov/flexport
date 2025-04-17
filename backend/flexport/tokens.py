@@ -7,17 +7,10 @@ from fastapi.security import HTTPBearer
 
 from flexport.db import DATABASE_PATH
 
-<<<<<<< HEAD
-SECRET_KEY = "heiSais2heiSais2"  # Replace with a secure secret key
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 1 week
-=======
 
 SECRET_KEY = "heiSais2heiSais2"  # Replace with a secure secret key
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 600
-
->>>>>>> 95912e9 (Update .gitignore, modify FTP port in SFTPRequest model, enhance FTP file listing, and add error logging; create env_populate script and update API base URL)
 
 security = HTTPBearer()
 

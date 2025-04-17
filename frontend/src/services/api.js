@@ -1,10 +1,6 @@
 // src/services/api.js
 
-<<<<<<< HEAD
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
-=======
 const API_BASE_URL = 'http://lifespan:8009';
->>>>>>> 95912e9 (Update .gitignore, modify FTP port in SFTPRequest model, enhance FTP file listing, and add error logging; create env_populate script and update API base URL)
 
 export const login = async (credentials) => {
   const res = await fetch(`${API_BASE_URL}/login`, {
