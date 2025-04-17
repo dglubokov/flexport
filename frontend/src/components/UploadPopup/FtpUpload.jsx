@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { fetchFTPFiles, fetchSFTPFiles, downloadFTPFile, downloadSFTPFile } from '../../services/api';
 import { humanReadableSize } from '../../services/utils';
 import { toast } from 'react-toastify';
+import FolderBrowser from '../FolderBrowser';
 
 const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
   const defaultPort = {
@@ -27,6 +28,7 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
   const [pathHistory, setPathHistory] = useState(['/']);
   const [isLoading, setIsLoading] = useState(false);
   const [connectionError, setConnectionError] = useState('');
+  const [showFolderBrowser, setShowFolderBrowser] = useState(false);
 
   // Update port when protocol changes
   useEffect(() => {
@@ -58,6 +60,14 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
       protocol,
       port: defaultPort[protocol]
     }));
+  };
+
+  const handleSelectPath = (selectedPath) => {
+    setFtpData(prevData => ({
+      ...prevData,
+      local_path: selectedPath
+    }));
+    setShowFolderBrowser(false);
   };
 
   const validateConnection = () => {
@@ -241,7 +251,7 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
         <div className="ftp-header">
           <h2>{ftpData.protocol} Connection: {ftpData.host}</h2>
           <div className="ftp-path-display">
-            Current path: {currentRemotePath || '/'}
+            Current remote path: {currentRemotePath || '/'}
           </div>
         </div>
         
@@ -256,6 +266,23 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
             </button>
           </div>
         )}
+        
+        {/* Local path selection */}
+        <div className="destination-folder">
+          <div className="form-group">
+            <label>Local Download Folder:</label>
+            <div className="path-display">
+              <span className="current-path">{ftpData.local_path}</span>
+              <button 
+                className="fancy-button browse-button"
+                onClick={() => setShowFolderBrowser(true)}
+                type="button"
+              >
+                Browse...
+              </button>
+            </div>
+          </div>
+        </div>
         
         <div className="ftp-actions-top">
           <button 
@@ -285,6 +312,19 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
             Download Selected
           </button>
         </div>
+        
+        {/* Folder Browser Modal */}
+        {showFolderBrowser && (
+          <div className="folder-browser-modal" onClick={() => setShowFolderBrowser(false)}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <FolderBrowser
+                initialPath={ftpData.local_path}
+                onPathSelect={handleSelectPath}
+                onCancel={() => setShowFolderBrowser(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     );
   }
@@ -368,6 +408,23 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
           />
         </div>
 
+        {/* Local path selection */}
+        <div className="destination-folder">
+          <div className="form-group">
+            <label>Local Download Folder:</label>
+            <div className="path-display">
+              <span className="current-path">{ftpData.local_path}</span>
+              <button 
+                className="fancy-button browse-button"
+                onClick={() => setShowFolderBrowser(true)}
+                type="button"
+              >
+                Browse...
+              </button>
+            </div>
+          </div>
+        </div>
+
         <button 
           onClick={() => handleFetchFiles('/')} 
           className="fancy-button"
@@ -375,6 +432,19 @@ const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
         >
           {isLoading ? 'Connecting...' : 'Connect'}
         </button>
+        
+        {/* Folder Browser Modal */}
+        {showFolderBrowser && (
+          <div className="folder-browser-modal" onClick={() => setShowFolderBrowser(false)}>
+            <div onClick={(e) => e.stopPropagation()}>
+              <FolderBrowser
+                initialPath={ftpData.local_path}
+                onPathSelect={handleSelectPath}
+                onCancel={() => setShowFolderBrowser(false)}
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

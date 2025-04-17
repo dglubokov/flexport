@@ -2,11 +2,14 @@
 
 import React, { useState } from 'react';
 import { handleLinksUpload as apiHandleLinksUpload } from '../../services/api';
-import { toast } from 'react-toastify';  // Add toast for better feedback
+import { toast } from 'react-toastify';
+import FolderBrowser from '../FolderBrowser';
 
 const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
   const [linkList, setLinkList] = useState(['']);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadPath, setUploadPath] = useState(currentPath);
+  const [showFolderBrowser, setShowFolderBrowser] = useState(false);
 
   const handleLinkChange = (e, index) => {
     const newLinks = [...linkList];
@@ -24,6 +27,11 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
     setLinkList(newLinks);
   };
 
+  const handleSelectPath = (selectedPath) => {
+    setUploadPath(selectedPath);
+    setShowFolderBrowser(false);
+  };
+
   const handleLinksUpload = async () => {
     const linksToUpload = linkList.filter((link) => link.trim() !== '');
     if (linksToUpload.length === 0) {
@@ -34,7 +42,7 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
     setIsUploading(true);
     
     try {
-      const res = await apiHandleLinksUpload(linksToUpload, currentPath);
+      const res = await apiHandleLinksUpload(linksToUpload, uploadPath);
       if (res.ok) {
         toast.success('Links are processing. Please check Sessions for progress.');
         fetchFiles(currentPath); // Refresh the file list
@@ -54,6 +62,24 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
   return (
     <div>
       <h3>Upload based on list of links</h3>
+      
+      {/* Destination folder selection */}
+      <div className="destination-folder">
+        <div className="form-group">
+          <label>Destination Folder:</label>
+          <div className="path-display">
+            <span className="current-path">{uploadPath}</span>
+            <button 
+              className="fancy-button browse-button"
+              onClick={() => setShowFolderBrowser(true)}
+              type="button"
+            >
+              Browse...
+            </button>
+          </div>
+        </div>
+      </div>
+      
       {linkList.map((link, index) => (
         <div key={index} className='link-upload-container'>
           <input
@@ -81,6 +107,19 @@ const LinksUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
           {isUploading ? 'Uploading...' : 'Upload'}
         </button>
       </div>
+      
+      {/* Folder Browser Modal */}
+      {showFolderBrowser && (
+        <div className="folder-browser-modal" onClick={() => setShowFolderBrowser(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <FolderBrowser
+              initialPath={uploadPath}
+              onPathSelect={handleSelectPath}
+              onCancel={() => setShowFolderBrowser(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

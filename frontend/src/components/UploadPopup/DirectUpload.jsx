@@ -1,11 +1,16 @@
+// src/components/UploadPopup/DirectUpload.jsx
 import React, { useState } from 'react';
 import { handleDirectUpload as apiHandleDirectUpload } from '../../services/api';
 import { humanReadableSize } from '../../services/utils';
+import { toast } from 'react-toastify';
+import FolderBrowser from '../FolderBrowser';
 
 const DirectUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
   const [selectedFiles, setSelectedFiles] = useState([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadPath, setUploadPath] = useState(currentPath);
+  const [showFolderBrowser, setShowFolderBrowser] = useState(false);
 
   const handleFileChange = (e) => {
     setSelectedFiles(Array.from(e.target.files));
@@ -15,9 +20,14 @@ const DirectUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
     setSelectedFiles((prevFiles) => prevFiles.filter((_, index) => index !== indexToRemove));
   };
 
+  const handleSelectPath = (selectedPath) => {
+    setUploadPath(selectedPath);
+    setShowFolderBrowser(false);
+  };
+
   const handleDirectUpload = async () => {
     if (selectedFiles.length === 0) {
-      alert('Please select files to upload.');
+      toast.warning('Please select files to upload.');
       return;
     }
 
@@ -29,25 +39,24 @@ const DirectUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
 
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
-        const res = await apiHandleDirectUpload(currentPath, file)
+        const res = await apiHandleDirectUpload(uploadPath, file);
 
         if (res.ok) {
           successfulUploads++;
         } else {
-          alert(`Error uploading file: ${file.name}`);
+          toast.error(`Error uploading file: ${file.name}`);
         }
 
         // Update upload progress
         setUploadProgress(((i + 1) / selectedFiles.length) * 100);
-
       }
 
       if (successfulUploads === selectedFiles.length) {
-        alert('Files uploaded successfully.');
+        toast.success('Files uploaded successfully.');
       } else if (successfulUploads > 0) {
-        alert('Some files were uploaded successfully, but some failed.');
+        toast.warning('Some files were uploaded successfully, but some failed.');
       } else {
-        alert('Error uploading files.');
+        toast.error('Error uploading files.');
       }
 
       fetchFiles(currentPath);
@@ -55,7 +64,7 @@ const DirectUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
 
     } catch (error) {
       console.error(error);
-      alert('An error occurred during file upload.');
+      toast.error('An error occurred during file upload.');
     } finally {
       setIsUploading(false);
     }
@@ -65,6 +74,24 @@ const DirectUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
     <div>
       <h2>Direct Upload</h2>
       <p className="upload-description">Use FileZilla or similar software for the large files!</p>
+      
+      {/* Destination folder selection */}
+      <div className="destination-folder">
+        <div className="form-group">
+          <label>Destination Folder:</label>
+          <div className="path-display">
+            <span className="current-path">{uploadPath}</span>
+            <button 
+              className="fancy-button browse-button"
+              onClick={() => setShowFolderBrowser(true)}
+              type="button"
+            >
+              Browse...
+            </button>
+          </div>
+        </div>
+      </div>
+      
       <div className="direct-upload-container">
         <input
           type="file"
@@ -124,6 +151,19 @@ const DirectUpload = ({ currentPath, fetchFiles, closeUploadPopup }) => {
       >
         {isUploading ? 'Uploading...' : 'Upload'}
       </button>
+      
+      {/* Folder Browser Modal */}
+      {showFolderBrowser && (
+        <div className="folder-browser-modal" onClick={() => setShowFolderBrowser(false)}>
+          <div onClick={(e) => e.stopPropagation()}>
+            <FolderBrowser
+              initialPath={uploadPath}
+              onPathSelect={handleSelectPath}
+              onCancel={() => setShowFolderBrowser(false)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

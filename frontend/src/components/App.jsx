@@ -4,6 +4,7 @@ import { useAppContext } from '../context/AppContext';
 import LoginForm from './LoginForm';
 import Navbar from './Navbar';
 import FileList from './FileList';
+import ImprovedPathNavigator from './PathNavigator';
 import UploadPopup from './UploadPopup/UploadPopup';
 import UploadSessionsPopup from './UploadSessionsPopup';
 import { humanReadableSize } from '../services/utils';
@@ -62,11 +63,17 @@ const App = () => {
           showSelection={showSelection}
           setShowSelection={setShowSelection}
           files={files}
+          setFiles={setFiles}
           fetchFiles={fetchFiles}
           currentPath={currentPath}
         />
 
-        <h3>{currentPath}</h3>
+        {/* Use the improved path navigator */}
+        <ImprovedPathNavigator 
+          currentPath={currentPath}
+          fetchFiles={fetchFiles}
+        />
+
         <div className="space-info-main-container">
           <div className="space-info">
             <div className="space-bar-container">
