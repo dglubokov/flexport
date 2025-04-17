@@ -8,3 +8,4 @@ asyncssh
 aioftp
 aiosqlite
 aiohttp
+six

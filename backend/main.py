@@ -470,3 +470,9 @@ async def upload_files_from_links(
         background_tasks.add_task(download_file_from_link, link, upload_dir, current_user)
 
     return {"message": "Files are being downloaded and uploaded."}
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8009)

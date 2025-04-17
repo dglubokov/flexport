@@ -42,7 +42,7 @@ class SFTPRequest(BaseModel):
     password: str
     local_path: str
     local_user_id: str
-    port: int = 22  # Default SFTP port
+    port: int = 21
     path: str = "/"  # Default to root directory
 
 

@@ -8,14 +8,15 @@ import { toast } from 'react-toastify';
 
 const FtpUpload = ({ currentPath, credentials, closeUploadPopup }) => {
   const [ftpData, setFtpData] = useState({
-    protocol: 'SFTP',
+    protocol: 'FTP',
     host: '',
-    port: 22,
+    port: 21,
     username: '',
     password: '',
     path: '',
     local_path: '',
     local_user_id: '',
+    is_dir: true
   });
   const [ftpFiles, setFtpFiles] = useState([]);
   const [currentPathRemote, setCurrentPathRemote] = useState('');

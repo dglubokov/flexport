@@ -1,9 +1,11 @@
 import os
 import stat
+from pathlib import Path
 
 import aioftp
 import asyncssh
 import aiofiles
+from fastapi import logger
 
 from flexport.models import SessionStatusEnum
 from flexport.db import update_session_status
@@ -14,22 +16,20 @@ from flexport.db import update_session_status
 # ============================================================
 async def list_files_ftp(host, username, password, port=21, path="/"):
     """Asynchronous list of files and directories with metadata from an FTP server."""
-    try:
-        async with aioftp.Client.context(host, port=port, user=username, password=password) as client:
-            file_metadata = []
-            async for path_info in client.list(path, recursive=False):
-                file_metadata.append(
-                    {
-                        "name": path_info["name"],
-                        "type": "directory" if path_info["type"] == "dir" else "file",
-                        "size": path_info.get("size", 0),
-                        "modified_time": path_info.get("modify"),
-                    }
-                )
-            return file_metadata
-    except Exception as e:
-        print(f"FTP error: {e}")
-        return None
+    async with aioftp.Client.context(host, port=port, user=username, password=password) as client:
+        file_metadata = []
+        async for path_info_tuple in client.list(path, recursive=False):
+            path_ftp = str(path_info_tuple[0]).replace('/', '')
+            path_info = path_info_tuple[1]
+            file_metadata.append(
+                {
+                    "name": path_ftp,
+                    "type": "directory" if path_info["type"] == "dir" else "file",
+                    "size": int(path_info.get("size", 0)),
+                    "modified_time": path_info.get("modify"),
+                }
+            )
+        return file_metadata
 
 
 async def download_ftp(
@@ -46,13 +46,23 @@ async def download_ftp(
         await update_session_status(session_id, SessionStatusEnum.processing)
 
         async with aioftp.Client.context(host, port=port, user=username, password=password) as client:
+            is_file = await client.is_file(remote_path)
+            if not is_file:
+                await download_directory_ftp(host, username, password, remote_path, local_path)
             async with aiofiles.open(local_path, "wb") as local_file:
                 async for block in client.download_stream(remote_path):
                     await local_file.write(block)
 
         await update_session_status(session_id, SessionStatusEnum.completed)
     except Exception as e:
+        logger.logger.error(e)
         await update_session_status(session_id, SessionStatusEnum.failed, details=str(e))
+
+
+async def download_directory_ftp(host, user, password, remote_path, local_path):
+    local_path_dir = Path(local_path) / str(remote_path).split('/')[-1]
+    async with aioftp.Client.context(host, user=user, password=password) as client:
+        await client.download(remote_path, local_path_dir, write_into=True)
 
 
 # ============================================================
